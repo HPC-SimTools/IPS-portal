@@ -13,7 +13,7 @@
   </tr>
   {% for run in runs%}
   <tr>
-    <td>{{ run.id }}</td>
+    <td><a href="run/{{ run.id }}">{{ run.id }}</a></td>
     <td>{{ run.state }}</td>
     <td>{{ run.rcomment }}</td>
   </tr>

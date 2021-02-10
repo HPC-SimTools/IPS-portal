@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Events{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<table style="width:100%">
+  <tr>
+    <th>Time</th>
+    <th>Code</th>
+    <th>EventType</th>
+    <th>Comment</th>
+    <th>Walltime</th>
+    <th>PhysicsTime</th>
+    <th>Seqnum</th>
+  </tr>
+  {% for event in events%}
+  <tr>
+    <td>{{ event.timestamp }}</td>
+    <td>{{ event.code }}</td>
+    <td>{{ event.eventtype }}</td>
+    <td>{{ event.comment }}</td>
+    <td>{{ event.walltime }}</td>
+    <td>{{ event.phystimestamp }}</td>
+    <td>{{ event.seqnum }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
