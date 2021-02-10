@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}Runs{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<table style="width:100%">
+  <tr>
+    <th>RunID</th>
+    <th>Status</th>
+    <th>Comment</th>
+  </tr>
+  {% for run in runs%}
+  <tr>
+    <td>{{ run.id }}</td>
+    <td>{{ run.state }}</td>
+    <td>{{ run.rcomment }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
