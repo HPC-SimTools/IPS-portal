@@ -15,7 +15,7 @@ def index():
 @bp.route("/<int:id>")
 def run(id):
     db = get_db()
-    r = db.execute('SELECT * FROM run WHERE id=?', str(id)).fetchone()
+    r = db.execute('SELECT * FROM run WHERE id=?', (str(id),)).fetchone()
     if r is None:
         return "Run id {0} doesn't exist.".format(id)
     portal_runid = r['portal_runid']
