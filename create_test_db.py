@@ -19,12 +19,16 @@ for n, json_file in enumerate(json_files):
     for line in json_lines:
         event = json.loads(line)
         if event.get('eventtype') == "IPS_START":
-            c.execute("insert into run (portal_runid, state, rcomment, tokamak, shotno) VALUES (?,?,?,?,?)",
+            c.execute("insert into run (portal_runid, state, rcomment, tokamak, shotno, simname, host, user, startat) VALUES (?,?,?,?,?,?,?,?,?)",
                       (event.get('portal_runid'),
                        event.get('state'),
                        event.get('rcomment'),
                        event.get('tokamak'),
-                       event.get('shotno')))
+                       event.get('shotno'),
+                       event.get('simname'),
+                       event.get('host'),
+                       event.get('user'),
+                       event.get('startat')))
 
         c.execute("insert into event (code, eventtype, comment, walltime, phystimestamp, portal_runid, seqnum) VALUES (?,?,?,?,?,?,?)",
                   (event.get('code'),

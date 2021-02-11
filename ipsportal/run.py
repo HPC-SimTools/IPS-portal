@@ -20,7 +20,7 @@ def run(id):
         return "Run id {0} doesn't exist.".format(id)
     portal_runid = r['portal_runid']
     events = db.execute("SELECT * FROM event WHERE portal_runid=?", (portal_runid,)).fetchall()
-    return render_template("events.html", events=events)
+    return render_template("events.html", run=r, events=events)
 
 
 @bp.route("/", methods=("POST", "GET"))
@@ -28,12 +28,20 @@ def event():
     e = json.loads(request.data)
     db = get_db()
     if e.get('eventtype') == "IPS_START":
-        db.execute("INSERT INTO run (portal_runid, state, rcomment, tokamak, shotno) VALUES (?,?,?,?,?)",
+        db.execute("INSERT INTO run (portal_runid, state, rcomment, tokamak, shotno, simname, host, user, startat, simrunid, outputprefix, tag, simroot) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                    (e.get('portal_runid'),
                     e.get('state'),
                     e.get('rcomment'),
                     e.get('tokamak'),
-                    e.get('shotno')))
+                    e.get('shotno'),
+                    e.get('simname'),
+                    e.get('host'),
+                    e.get('user'),
+                    e.get('startat'),
+                    e.get('simrunid'),
+                    e.get('outputprefix'),
+                    e.get('tag'),
+                    e.get('simroot')))
 
     db.execute("INSERT INTO event (code, eventtype, comment, walltime, phystimestamp, portal_runid, seqnum) VALUES (?,?,?,?,?,?,?)",
                (e.get('code'),

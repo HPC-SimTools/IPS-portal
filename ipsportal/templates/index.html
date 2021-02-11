@@ -10,12 +10,20 @@
     <th>RunID</th>
     <th>Status</th>
     <th>Comment</th>
+    <th>Sim Name</th>
+    <th>Host</th>
+    <th>User</th>
+    <th>Start Time</th>
   </tr>
   {% for run in runs%}
   <tr>
     <td><a href="{{ run.id }}">{{ run.id }}</a></td>
     <td>{{ run.state }}</td>
     <td>{{ run.rcomment }}</td>
+    <td>{{ run.simname }}</td>
+    <td>{{ run.host }}</td>
+    <td>{{ run.user }}</td>
+    <td>{{ run.startat }}</td>
   </tr>
   {% endfor %}
 </table>
