@@ -42,7 +42,8 @@ def event():
                     e.get('outputprefix'),
                     e.get('tag'),
                     e.get('simroot')))
-
+    elif e.get('eventtype') == "IPS_END":
+        db.execute("UPDATE run SET state = ?, stopat = ? WHERE portal_runid = ?", (e.get('state'), e.get('stopat'), e.get('portal_runid')))
     db.execute("INSERT INTO event (code, eventtype, comment, walltime, phystimestamp, portal_runid, seqnum) VALUES (?,?,?,?,?,?,?)",
                (e.get('code'),
                 e.get('eventtype'),

@@ -12,6 +12,7 @@ CREATE TABLE run (
   host TEXT,
   user TEXT,
   startat TEXT,
+  stopat TEXT,
   simrunid TEXT,
   outputprefix TEXT,
   tag TEXT,
