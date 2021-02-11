@@ -15,6 +15,8 @@ ADD . /code
 RUN cd /code && python3 -m pip install .
 RUN rm -r /code
 
+RUN mkdir -p /usr/var/ipsportal-instance && chmod 777 /usr/var/ipsportal-instance
+
 CMD ["waitress-serve", "--call", "ipsportal:create_app"]
 
 ADD docker-entrypoint.sh /bin/docker-entrypoint.sh
