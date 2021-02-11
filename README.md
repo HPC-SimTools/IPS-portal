@@ -14,13 +14,13 @@ flask init-db
 flask run
 ```
 
-Go to http://127.0.0.1:5000
+Go to http://localhost:5000
 
 ## Run with docker in production
 
 ```shell
 docker build -t ipsportal .
-docker run -p 8080:8080 -v /tmp/ips:/usr/var/ipsportal-instance -t ipsportal
+docker run -p 8080:8080 -v /tmp/ips:/usr/var/ipsportal-instance --rm -t ipsportal
 ```
 
-Go to http://127.0.0.1:8080
+Go to http://localhost:8080
