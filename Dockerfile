@@ -7,10 +7,16 @@ RUN \
     apt-get update              &&  \
     apt-get upgrade --yes       &&  \
     apt-get install --yes           \
-    python3-flask
+    python3-flask                   \
+    python3-pip                     \
+    python3-waitress
 
-ADD ipsportal /srv/ipsportal
-ENV FLASK_APP=ipsportal
-WORKDIR "/srv"
-RUN ["flask", "init-db"]
-CMD ["flask", "run", "--host=0.0.0.0"]
+ADD . /code
+RUN cd /code && python3 -m pip install .
+RUN rm -r /code
+
+CMD ["waitress-serve", "--call", "ipsportal:create_app"]
+
+ADD docker-entrypoint.sh /bin/docker-entrypoint.sh
+RUN chmod +x /bin/docker-entrypoint.sh
+ENTRYPOINT ["/bin/docker-entrypoint.sh"]
