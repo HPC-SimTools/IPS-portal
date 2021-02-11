@@ -1,0 +1,4 @@
+include ipsportal/schema.sql
+graft ipsportal/static
+graft ipsportal/templates
+global-exclude *.pyc
