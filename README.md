@@ -24,3 +24,10 @@ docker run -p 8080:8080 -v /tmp/ips:/usr/var/ipsportal-instance --rm -t ipsporta
 ```
 
 Go to http://localhost:8080
+
+## To push to dockerhub
+
+```shell
+docker build -t rosswhitfield/ipsportal:latest .
+docker push rosswhitfield/ipsportal:latest
+```
