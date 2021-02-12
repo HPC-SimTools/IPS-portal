@@ -63,22 +63,22 @@
 <table style="width:100%">
   <tr>
     <th>Time</th>
-    <th>Code</th>
+    <th>Seq Num</th>
     <th>Event Type</th>
-    <th>Comment</th>
+    <th>Code</th>
     <th>Walltime</th>
-    <th>PhysicsTime</th>
-    <th>Seqnum</th>
+    <th>Physics Time</th>
+    <th>Comment</th>
   </tr>
   {% for event in events%}
   <tr>
     <td>{{ event.created }}</td>
-    <td>{{ event.code }}</td>
+    <td>{{ event.seqnum }}</td>
     <td>{{ event.eventtype }}</td>
-    <td>{{ event.comment }}</td>
+    <td>{{ event.code }}</td>
     <td>{{ event.walltime }}</td>
     <td>{{ event.phystimestamp }}</td>
-    <td>{{ event.seqnum }}</td>
+    <td>{{ event.comment }}</td>
   </tr>
   {% endfor %}
 </table>

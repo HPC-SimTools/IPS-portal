@@ -8,7 +8,7 @@ bp = Blueprint('index', __name__)
 @bp.route("/")
 def index():
     db = get_db()
-    runs = db.execute("SELECT * FROM run").fetchall()
+    runs = db.execute("SELECT * FROM run ORDER BY id DESC").fetchall()
     return render_template("index.html", runs=runs)
 
 
@@ -19,7 +19,7 @@ def run(id):
     if r is None:
         return "Run id {0} doesn't exist.".format(id)
     portal_runid = r['portal_runid']
-    events = db.execute("SELECT * FROM event WHERE portal_runid=?", (portal_runid,)).fetchall()
+    events = db.execute("SELECT * FROM event WHERE portal_runid=? ORDER BY seqnum DESC", (portal_runid,)).fetchall()
     return render_template("events.html", run=r, events=events)
 
 
