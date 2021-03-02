@@ -1,5 +1,5 @@
 import json
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request
 from ipsportal.db import get_db
 
 bp = Blueprint('index', __name__)
@@ -17,7 +17,7 @@ def run(id):
     db = get_db()
     r = db.execute('SELECT * FROM run WHERE id=?', (str(id),)).fetchone()
     if r is None:
-        return "Run id {0} doesn't exist.".format(id)
+        return ("Run ID {0} does not exist.".format(id), 404)
     portal_runid = r['portal_runid']
     events = db.execute("SELECT * FROM event WHERE portal_runid=? ORDER BY seqnum DESC", (portal_runid,)).fetchall()
     return render_template("events.html", run=r, events=events)
@@ -26,6 +26,9 @@ def run(id):
 @bp.route("/", methods=("POST", "GET"))
 def event():
     e = json.loads(request.data)
+    required = {'code', 'eventtype', 'comment', 'walltime', 'phystimestamp', 'portal_runid', 'seqnum'}
+    if not e.keys() >= required:
+        return ('failed', 400)
     db = get_db()
     if e.get('eventtype') == "IPS_START":
         db.execute("INSERT INTO run (portal_runid, state, rcomment, tokamak, shotno, simname, host, user, startat, simrunid, outputprefix, tag, simroot) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -54,4 +57,4 @@ def event():
                 e.get('seqnum')))
     db.commit()
 
-    return jsonify(e)
+    return ('success', 200)
