@@ -29,4 +29,20 @@
   </tr>
   {% endfor %}
 </table>
+
+<p style="text-align:right">
+{% if page > 1 %}
+<a href="?page={{page-1}}">&lt</a>
+{% endif %}
+{% for p in pages %}
+{% if p == page %}
+<b>{{ p }}</b>
+{% else %}
+<a href="?page={{p}}">{{ p }}</a>
+{% endif %}
+{% endfor %}
+{% if page < num_pages %}
+<a href="?page={{page+1}}">&gt</a>
+{% endif %}
+</p>
 {% endblock %}

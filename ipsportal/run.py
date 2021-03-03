@@ -1,17 +1,23 @@
 import json
 import time
 import pymongo
+import math
 from flask import Blueprint, render_template, request
 from ipsportal.db import get_db
 
 bp = Blueprint('index', __name__)
 
+ROWS_PER_PAGE = 20
+
 
 @bp.route("/")
 def index():
     db = get_db()
-    runs = db.run.find().sort('id', pymongo.DESCENDING)
-    return render_template("index.html", runs=runs)
+    page = request.args.get('page', 1, type=int)
+    num_pages = math.ceil(db.run.estimated_document_count() / ROWS_PER_PAGE)
+    pages = range(1, num_pages+1)
+    runs = db.run.find(skip=(page-1)*ROWS_PER_PAGE, limit=ROWS_PER_PAGE).sort('id', pymongo.DESCENDING)
+    return render_template("index.html", runs=runs, pages=pages, page=page, num_pages=num_pages)
 
 
 @bp.route("/<int:id>")
