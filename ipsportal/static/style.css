@@ -9,6 +9,9 @@ th, td {
 th {
     background: lightgreen;
 }
-td {
+tr:nth-child(even) {
     background: lightblue;
+}
+tr:nth-child(odd) {
+    background: lightcyan;
 }
