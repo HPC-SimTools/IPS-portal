@@ -9,6 +9,7 @@ RUN \
     apt-get install --yes           \
     python3-flask                   \
     python3-pip                     \
+    python3-pymongo                 \
     python3-waitress
 
 ADD . /code
