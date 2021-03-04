@@ -65,6 +65,17 @@
 {% else %}
 &gt
 {% endif %}
+
+</p>
+<p style="text-align:center">
+<select onChange="window.location.href=this.value">
+  <option value="">Rows per page</Option>
+  <option value={{ url_for('.index', page=page.page, rows=10, sort=sortby, direction=direction) }}>10</option>
+  <option value={{ url_for('.index', page=page.page, rows=None, sort=sortby, direction=direction) }}>20</option>
+  <option value={{ url_for('.index', page=page.page, rows=50, sort=sortby, direction=direction) }}>50</option>
+  <option value={{ url_for('.index', page=page.page, rows=100, sort=sortby, direction=direction) }}>100</option>
+</select>
+
 </p>
 
 {% endblock %}
