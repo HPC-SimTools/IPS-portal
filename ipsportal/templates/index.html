@@ -30,9 +30,11 @@
   {% endfor %}
 </table>
 
-<p style="text-align:right">
+<p style="text-align:center">
 {% if page > 1 %}
 <a href="?page={{page-1}}">&lt</a>
+{% else %}
+&lt
 {% endif %}
 {% for p in pages %}
 {% if p == page %}
@@ -43,6 +45,9 @@
 {% endfor %}
 {% if page < num_pages %}
 <a href="?page={{page+1}}">&gt</a>
+{% else %}
+&gt
 {% endif %}
 </p>
+
 {% endblock %}

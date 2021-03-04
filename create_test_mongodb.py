@@ -8,7 +8,7 @@ db = client.portal
 db.run.drop()
 db.event.drop()
 
-user = ['alice', 'bob', 'carol', 'dave' 'eve', 'frank', 'grace']
+user = ['alice', 'bob', 'carol', 'dave', 'eve', 'frank', 'grace']
 nrun = 1000
 nevent = 100
 
