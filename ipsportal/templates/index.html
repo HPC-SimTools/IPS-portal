@@ -18,7 +18,7 @@
   </tr>
   {% for run in runs%}
   <tr>
-    <td><a href="{{ run.runid }}">{{ run.runid }}</a></td>
+    <td><a href="{{ url_for('.run', runid=run.runid) }}">{{ run.runid }}</a></td>
     <td>{{ run.state }}</td>
     <td>{{ run.rcomment }}</td>
     <td>{{ run.simname }}</td>
@@ -32,7 +32,7 @@
 
 <p style="text-align:center">
 {% if page > 1 %}
-<a href="?page={{page-1}}">&lt</a>
+<a href="{{ url_for('.index', page=page-1) }}">&lt</a>
 {% else %}
 &lt
 {% endif %}
@@ -40,11 +40,11 @@
 {% if p == page %}
 <b>{{ p }}</b>
 {% else %}
-<a href="?page={{p}}">{{ p }}</a>
+<a href="{{ url_for('.index', page=p) }}">{{ p }}</a>
 {% endif %}
 {% endfor %}
 {% if page < num_pages %}
-<a href="?page={{page+1}}">&gt</a>
+<a href="{{ url_for('.index', page=page+1) }}">&gt</a>
 {% else %}
 &gt
 {% endif %}
