@@ -31,20 +31,20 @@
 </table>
 
 <p style="text-align:center">
-{% if page > 1 %}
-<a href="{{ url_for('.index', page=page-1) }}">&lt</a>
+{% if page.page > 1 %}
+<a href="{{ url_for('.index', page=page.page-1 if page.page > 2 else None, rows=page.rows if page.rows != page.rows_default else None, sort=sort.by if sort.by != sort.default else None, direction=sort.direction if sort.direction != sort.direction_default else None) }}">&lt</a>
 {% else %}
 &lt
 {% endif %}
-{% for p in pages %}
-{% if p == page %}
+{% for p in range(1, page.num_pages+1) %}
+{% if p == page.page %}
 <b>{{ p }}</b>
 {% else %}
-<a href="{{ url_for('.index', page=p) }}">{{ p }}</a>
+<a href="{{ url_for('.index', page=p if p != 1 else None, rows=page.rows if page.rows != page.rows_default else None, sort=sort.by if sort.by != sort.default else None, direction=sort.direction if sort.direction != sort.direction_default else None) }}">{{ p }}</a>
 {% endif %}
 {% endfor %}
-{% if page < num_pages %}
-<a href="{{ url_for('.index', page=page+1) }}">&gt</a>
+{% if page.page < page.num_pages %}
+<a href="{{ url_for('.index', page=page.page+1, rows=page.rows if page.rows != page.rows_default else None, sort=sort.by if sort.by != sort.default else None, direction=sort.direction if sort.direction != sort.direction_default else None) }}">&gt</a>
 {% else %}
 &gt
 {% endif %}
