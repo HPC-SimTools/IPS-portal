@@ -10,6 +10,15 @@ bp = Blueprint('index', __name__)
 ROWS_PER_PAGE = 20
 SORT_BY_DEFAULT = 'runid'
 SORT_DIRECTION_DEFAULT = -1
+SORTABLE = ('runid', 'state', 'rcomment', 'simname', 'host', 'user')
+INDEX_COLUMNS = ({'name': 'RunID', 'param': 'runid'},
+                 {'name': 'Status', 'param': 'state'},
+                 {'name': 'Comment', 'param': 'rcomment'},
+                 {'name': 'Sim Name', 'param': 'simname'},
+                 {'name': 'Host', 'param': 'host'},
+                 {'name': 'User', 'param': 'user'},
+                 {'name': 'Start Time', 'param': 'startat'},
+                 {'name': 'Stop Time', 'param': 'stopat'})
 
 
 @bp.route("/")
@@ -26,15 +35,16 @@ def index():
     sort = {}
     sort['by'] = request.args.get('sort', SORT_BY_DEFAULT)
     sort['default'] = SORT_BY_DEFAULT
-    if sort['by'] not in ('runid', 'state', 'rcomment', 'simname', 'host', 'user'):
+    if sort['by'] not in SORTABLE:
         sort['by'] = SORT_BY_DEFAULT
     sort['direction'] = request.args.get('direction', SORT_DIRECTION_DEFAULT, type=int)
     sort['direction_default'] = SORT_DIRECTION_DEFAULT
     if sort['direction'] not in (1, -1):
         sort['direction'] = SORT_DIRECTION_DEFAULT
+    sort['sortable'] = SORTABLE
 
     runs = db.run.find(skip=(page['page']-1)*page['rows'], limit=page['rows']).sort(sort['by'], sort['direction'])
-    return render_template("index.html", runs=runs, page=page, sort=sort)
+    return render_template("index.html", columns=INDEX_COLUMNS, runs=runs, page=page, sort=sort)
 
 
 @bp.route("/<int:runid>")

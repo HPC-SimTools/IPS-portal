@@ -5,34 +5,51 @@
 {% endblock %}
 
 {% block content %}
+
+{% set rows = page.rows if page.rows != page.rows_default else None %}
+{% set sortby = sort.by if sort.by != sort.default else None %}
+{% set direction = sort.direction if sort.direction != sort.direction_default else None %}
+{% set ndirection = -sort.direction if -sort.direction != sort.direction_default else None %}
+
 <table style="width:100%">
   <tr>
-    <th>RunID</th>
-    <th>Status</th>
-    <th>Comment</th>
-    <th>Sim Name</th>
-    <th>Host</th>
-    <th>User</th>
-    <th>Start Time</th>
-    <th>Stop Time</th>
+    {% for column in columns %}
+    {% if column.param in sort.sortable %}
+    <th>
+      {% if column.param == sort.by %}
+      <a href="{{ url_for('.index', sort=column.param, page=page.page, rows=rows, direction=ndirection) }}"> {{ column.name }}
+	{% if sort.direction == 1 %}
+	&#8593
+	{% else %}
+	&#8595
+	{% endif %}
+      </a>
+      {% else %}
+      <a href="{{ url_for('.index', sort=column.param, page=page.page, rows=rows, direction=direction) }}"> {{ column.name }} </a>
+      {% endif %}
+    </th>
+    {% else %}
+    <th>{{ column.name }}</th>
+    {% endif %}
+    {% endfor %}
   </tr>
   {% for run in runs%}
   <tr>
+    {% for column in columns %}
+    {% if column.param == 'runid' %}
     <td><a href="{{ url_for('.run', runid=run.runid) }}">{{ run.runid }}</a></td>
-    <td>{{ run.state }}</td>
-    <td>{{ run.rcomment }}</td>
-    <td>{{ run.simname }}</td>
-    <td>{{ run.host }}</td>
-    <td>{{ run.user }}</td>
-    <td>{{ run.startat }}</td>
-    <td>{{ run.stopat }}</td>
+    {% else %}
+    <td>{{ run.get(column.param) }}</td>
+    {% endif %}
+    {% endfor %}
   </tr>
   {% endfor %}
 </table>
 
+
 <p style="text-align:center">
 {% if page.page > 1 %}
-<a href="{{ url_for('.index', page=page.page-1 if page.page > 2 else None, rows=page.rows if page.rows != page.rows_default else None, sort=sort.by if sort.by != sort.default else None, direction=sort.direction if sort.direction != sort.direction_default else None) }}">&lt</a>
+<a href="{{ url_for('.index', page=page.page-1 if page.page > 2 else None, rows=rows, sort=sortby, direction=direction) }}">&lt</a>
 {% else %}
 &lt
 {% endif %}
@@ -40,11 +57,11 @@
 {% if p == page.page %}
 <b>{{ p }}</b>
 {% else %}
-<a href="{{ url_for('.index', page=p if p != 1 else None, rows=page.rows if page.rows != page.rows_default else None, sort=sort.by if sort.by != sort.default else None, direction=sort.direction if sort.direction != sort.direction_default else None) }}">{{ p }}</a>
+<a href="{{ url_for('.index', page=p if p != 1 else None, rows=rows, sort=sortby, direction=direction) }}">{{ p }}</a>
 {% endif %}
 {% endfor %}
 {% if page.page < page.num_pages %}
-<a href="{{ url_for('.index', page=page.page+1, rows=page.rows if page.rows != page.rows_default else None, sort=sort.by if sort.by != sort.default else None, direction=sort.direction if sort.direction != sort.direction_default else None) }}">&gt</a>
+<a href="{{ url_for('.index', page=page.page+1, rows=rows, sort=sortby, direction=direction) }}">&gt</a>
 {% else %}
 &gt
 {% endif %}
