@@ -4,6 +4,14 @@ body {
     padding: 2rem;
 }
 
+h1 {
+    text-shadow: 2px 2px 2px #999999;
+}
+
+a {
+    text-decoration-line: none;
+}
+
 table {
     border: 1px solid black;
     border-collapse: collapse;
