@@ -7,6 +7,7 @@
 {% block content %}
 
 {% set rows = page.rows if page.rows != page.rows_default else None %}
+{% set p = page.page if page.page !=1 else None %}
 {% set sortby = sort.by if sort.by != sort.default else None %}
 {% set direction = sort.direction if sort.direction != sort.direction_default else None %}
 {% set ndirection = -sort.direction if -sort.direction != sort.direction_default else None %}
@@ -16,8 +17,15 @@
     {% for column in columns %}
     {% if column.param in sort.sortable %}
     <th>
+      {% if column.param == sort.default %}
+      {% set column_sort = None %}
+      {% else %}
+      {% set column_sort = column.param %}
+      {% endif %}
+
       {% if column.param == sort.by %}
-      <a href="{{ url_for('.index', sort=column.param, page=page.page, rows=rows, direction=ndirection) }}"> {{ column.name }}
+      <a href="{{ url_for('.index', sort=column_sort, page=p, rows=rows, direction=ndirection) }}">
+	{{ column.name }}
 	{% if sort.direction == 1 %}
 	&#8593
 	{% else %}
@@ -25,7 +33,7 @@
 	{% endif %}
       </a>
       {% else %}
-      <a href="{{ url_for('.index', sort=column.param, page=page.page, rows=rows, direction=direction) }}"> {{ column.name }} </a>
+      <a href="{{ url_for('.index', sort=column_sort, page=p, rows=rows, direction=direction) }}"> {{ column.name }} </a>
       {% endif %}
     </th>
     {% else %}
