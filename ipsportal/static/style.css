@@ -1,3 +1,9 @@
+body {
+    font-family: 'Verdana', sans-serif;
+    background: #eeeeee;
+    padding: 2rem;
+}
+
 table {
     border: 1px solid black;
     border-collapse: collapse;
