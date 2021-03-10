@@ -44,7 +44,7 @@ docker-compose up
 
 Go to http://localhost:8080
 
-## A docker continer to create db backups
+## A docker container to create db backups
 
 ```
 docker build -f Dockerfile.db-backup -t rosswhitfield/ipsportal-backup:latest .

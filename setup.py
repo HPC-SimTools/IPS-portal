@@ -10,4 +10,5 @@ setup(
         'flask',
         'pymongo'
     ],
+    scripts=['scripts/create_test_mongodb.py']
 )

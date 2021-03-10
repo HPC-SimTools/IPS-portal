@@ -1,9 +1,12 @@
+#!/usr/bin/env python
+
 from pymongo import MongoClient
-from numpy.random import choice, randint
+from random import choice, randint
 import time
+import os
 
 
-client = MongoClient(port=27017)
+client = MongoClient('mongodb://'+os.environ['MONGODB_HOSTNAME']+':27017')
 db = client.portal
 db.run.drop()
 db.event.drop()
@@ -13,16 +16,16 @@ nrun = 1000
 nevent = 100
 
 for run in range(nrun):
-    portal_id = str(randint(1e18))
+    portal_id = str(randint(0, 1e18))
     r = {
         'runid': run,
         'portal_runid': portal_id,
         'user': choice(user),
-        'host': 'node{}'.format(randint(1000)),
+        'host': 'node{}'.format(randint(1, 1000)),
         'state': 'Completed',
         'rcomment': f"This is run {run}",
         'tokamak': 'tokamak',
-        'shotno': randint(1000),
+        'shotno': randint(1, 1000),
         'simname': 'test data',
         'startat': time.strftime('%Y-%m-%d|%H:%M:%S%Z', time.localtime(time.time()-60*(nrun-run))),
         'stopat': time.strftime('%Y-%m-%d|%H:%M:%S%Z', time.localtime(time.time()-60*(nrun-run-1))),
