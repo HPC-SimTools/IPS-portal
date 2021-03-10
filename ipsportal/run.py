@@ -43,7 +43,9 @@ def index():
         sort['direction'] = SORT_DIRECTION_DEFAULT
     sort['sortable'] = SORTABLE
 
-    runs = db.run.find(skip=max((page['page']-1)*page['rows'], 0), limit=page['rows']).sort(sort['by'], sort['direction'])
+    runs = db.run.find(skip=max((page['page']-1)*page['rows'], 0),
+                       limit=page['rows']
+                       ).sort(sort['by'], sort['direction'])
     return render_template("index.html", columns=INDEX_COLUMNS, runs=runs, page=page, sort=sort)
 
 
