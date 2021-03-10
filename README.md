@@ -26,14 +26,13 @@ docker run --rm -p 27017:27017 -v /tmp/db:/data/db mongo:4
 ## build and run ipsportal
 
 ```shell
-docker build -t ipsportal .
-docker run -p 8080:8080 --rm --env MONGODB_HOSTNAME=localhost --network host -t ipsportal
+docker build -t rosswhitfield/ipsportal:latest .
+docker run -p 8080:8080 --rm --env MONGODB_HOSTNAME=localhost --network host -t rosswhitfield/ipsportal:latest
 ```
 
 ## To push to dockerhub
 
 ```shell
-docker build -t rosswhitfield/ipsportal:latest .
 docker push rosswhitfield/ipsportal:latest
 ```
 
@@ -44,3 +43,9 @@ docker-compose up
 ```
 
 Go to http://localhost:8080
+
+## A docker continer to create db backups
+
+```
+docker build -f Dockerfile.db-backup -t rosswhitfield/ipsportal-backup:latest .
+```
