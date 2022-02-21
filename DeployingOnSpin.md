@@ -54,10 +54,27 @@ Deploy
    - Add Capabilities
      - NET_BIND_SERVICE
 
+Jaeger
+ - Name: jaeger
+ - Docker Image: jaegertracing/all-in-one:1.31
+ - Namespace: ipsportal
+ - Environment Variables
+   - Add Variable
+     - COLLECTOR_ZIPKIN_HOST_PORT: 9411
+     - QUERY_BASE_PATH: /jaeger
+ - Secutiry & Host Config
+   - Drop Capabilties
+     - ALL
+
 Add Ingress
  - Name: lb
  - Namespace: ipsportal
  - Specify a hostname to use
    - Request Host: lb.ipsportal.development.svc.spin.nersc.org
- - Target: ipsportal
- - Port: 8080
+ - Paths:
+   - /
+     - Target: ipsportal
+     - Port: 8080
+   - /jaeger
+     - Target: jaeger
+     - Port: 16686

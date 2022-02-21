@@ -10,7 +10,8 @@ RUN \
     python3-flask                   \
     python3-pip                     \
     python3-pymongo                 \
-    python3-waitress
+    python3-waitress                \
+    python3-requests
 
 ADD . /code
 RUN cd /code && python3 -m pip install .

@@ -2,23 +2,29 @@ version: '3.3'
 services:
     db:
         image: mongo:4
-        container_name: mongodb
         restart: unless-stopped
-        networks:
-         - backend
 
     app:
-        image: ipsportal
+        build:
+          context: .
         restart: unless-stopped
         environment:
           MONGODB_HOSTNAME: db
-        ports:
-         - 8080:8080
         depends_on:
          - db
-        networks:
-         - backend
 
-networks:
-  backend:
-    driver: bridge
+    jaeger:
+        image: jaegertracing/all-in-one:1.31
+        environment:
+          COLLECTOR_ZIPKIN_HOST_PORT: 9411
+          QUERY_BASE_PATH: /jaeger
+
+    web:
+      image: nginx
+      ports:
+        - 80:80
+      volumes:
+        - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      depends_on:
+        - app
+        - jaeger

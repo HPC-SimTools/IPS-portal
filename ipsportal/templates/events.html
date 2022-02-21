@@ -54,6 +54,22 @@
     <td>Tag</td>
     <td>{{ run.tag }}</td>
   </tr>
+  <tr>
+    <td>IPS version</td>
+    <td>{{ run.ips_version }}</td>
+  </tr>
+  <tr>
+    <td>Trace</td>
+    {% if run.state == "Completed" %}
+    {% if run.trace is defined %}
+    <td><a href="{{ url_for('.gettrace', runid=run.runid) }}">trace</a></td>
+    {% else %}
+    <td>no trace information available</td>
+    {% endif %}
+    {% else %}
+    <td>wait for run to finish</td>
+    {% endif %}
+  </tr>
 </table>
 <h1>Events</h1>
 <table style="width:100%">
