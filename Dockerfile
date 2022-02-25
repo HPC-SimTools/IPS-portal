@@ -1,17 +1,12 @@
-FROM ubuntu:20.04
+FROM continuumio/miniconda3
 
-ENV LC_ALL=C.UTF-8
-ENV LANG=C.UTF-8
-
-RUN \
-    apt-get update              &&  \
-    apt-get upgrade --yes       &&  \
-    apt-get install --yes           \
-    python3-flask                   \
-    python3-pip                     \
-    python3-pymongo                 \
-    python3-waitress                \
-    python3-requests
+RUN conda install \
+    flask=2.0 \
+    pymongo=3.12 \
+    waitress=2.0 \
+    pip \
+    plotly=5.1 \
+    numpy=1.21
 
 ADD . /code
 RUN cd /code && python3 -m pip install .

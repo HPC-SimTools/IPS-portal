@@ -70,6 +70,18 @@
     <td>wait for run to finish</td>
     {% endif %}
   </tr>
+  <tr>
+    <td>Resource usage</td>
+    {% if run.state == "Completed" %}
+    {% if run.trace is defined %}
+    <td><a href="{{ url_for('.resource_plot', runid=run.runid) }}">plot</a></td>
+    {% else %}
+    <td>no trace information available</td>
+    {% endif %}
+    {% else %}
+    <td>wait for run to finish</td>
+    {% endif %}
+  </tr>
 </table>
 <h1>Events</h1>
 <table style="width:100%">
