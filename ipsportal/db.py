@@ -5,7 +5,7 @@ import os
 
 def get_db():
     if 'db' not in g:
-        client = MongoClient('mongodb://'+os.environ['MONGODB_HOSTNAME']+':27017')
+        client = MongoClient('mongodb://'+os.environ.get('MONGODB_HOSTNAME', 'localhost')+':27017')
         g.db = client.portal
 
     return g.db
