@@ -1,14 +1,8 @@
 FROM continuumio/miniconda3
 
-RUN conda install \
-    flask=2.0 \
-    pymongo=3.12 \
-    waitress=2.0 \
-    pip \
-    plotly=5.1 \
-    numpy=1.21
-
 ADD . /code
+RUN conda env update --name base --file /code/environment.yml
+
 RUN cd /code && python3 -m pip install .
 RUN rm -r /code
 

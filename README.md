@@ -2,6 +2,16 @@
 
 ## Run in development mode
 
+Setup environment with conda and install testing requirements
+
+```shell
+conda env create -f environment.yml
+conda activate ipsportal
+conda env update -f environment_dev.yml
+```
+
+Install and run the appilcation
+
 ```shell
 python -m pip install -e .
 
