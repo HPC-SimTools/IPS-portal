@@ -100,8 +100,8 @@ def gettrace(runid):
 
     try:
         x = requests.get(f"http://jaeger:16686/jaeger/api/traces/{traceID}")
-    except requests.exceptions.ConnectionError:
-        return "Unable to connect to jaeger", 500
+    except requests.exceptions.ConnectionError as e:
+        return f"Unable to connect to jaeger because:<br>{e}", 500
 
     if x.status_code != 200:
         events = db.event.find({'portal_runid': r['portal_runid']})
