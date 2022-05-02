@@ -7,6 +7,14 @@ def test_post_invalid_event(client):
     assert response.status_code == 400
 
 
+def test_post_invalid_run_number(client):
+    run = 999999
+    response = client.get(f"/{run}")
+    assert response.status_code == 404
+    assert f"Run - {run}" in response.text
+    assert "Not found" in response.text
+
+
 def test_post_event(client):
     portal_runid = str(uuid1())
     response = client.post("/", json={'code': "Framework",
@@ -46,3 +54,11 @@ def test_post_event(client):
     assert f"CI Test {portal_runid}" in response.text
     assert f"Starting IPS Simulation {portal_runid}" in response.text
     assert f"Simulation Ended {portal_runid}" in response.text
+
+    response = client.get("/gettrace/0")
+    assert response.status_code == 500
+    assert "Unable to connect to jaeger" in response.text
+
+    response = client.get("/resource_plot/0")
+    assert response.status_code == 500
+    assert "Unable to plot because missing 'trace' information" in response.text

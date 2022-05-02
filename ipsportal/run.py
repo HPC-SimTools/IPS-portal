@@ -58,7 +58,7 @@ def run(runid):
     db = get_db()
     r = db.run.find_one({'runid': runid})
     if r is None:
-        return render_template("notfound.html", run=runid)
+        return render_template("notfound.html", run=runid), 404
 
     events = db.event.find({'portal_runid': r['portal_runid']}).sort('seqnum', pymongo.DESCENDING)
 
@@ -98,7 +98,10 @@ def gettrace(runid):
     portal_runid = r['portal_runid']
     traceID = hashlib.md5(portal_runid.encode()).hexdigest()
 
-    x = requests.get(f"http://jaeger:16686/jaeger/api/traces/{traceID}")
+    try:
+        x = requests.get(f"http://jaeger:16686/jaeger/api/traces/{traceID}")
+    except requests.exceptions.ConnectionError:
+        return "Unable to connect to jaeger", 500
 
     if x.status_code != 200:
         events = db.event.find({'portal_runid': r['portal_runid']})
@@ -109,7 +112,10 @@ def gettrace(runid):
         headers = {'accept': 'application/json',
                    'Content-Type': 'application/json'}
 
-        x = requests.post(url, data=json.dumps(spans), headers=headers)
+        try:
+            x = requests.post(url, json=spans, headers=headers, timeout=1)
+        except requests.exceptions.ConnectionError:
+            return "Unable to retrieve trace", 500
 
     return redirect(f"/jaeger/trace/{hashlib.md5(r['portal_runid'].encode()).hexdigest()}")
 
@@ -126,45 +132,48 @@ def resource_plot(runid):
     tasks = []
     task_set = set()
 
-    for ev in events:
-        if ev["eventtype"] == "IPS_TASK_END":
-            tasks.append(ev)
-            task_set.add(ev['trace']['localEndpoint']['serviceName'])
+    try:
+        for ev in events:
+            if ev["eventtype"] == "IPS_TASK_END":
+                tasks.append(ev)
+                task_set.add(ev['trace']['localEndpoint']['serviceName'])
 
-    time_start = float(r["trace"]['timestamp'])/1e6
-    duration = float(r["trace"]['duration'])/1e6
-    total_cores = int(r["trace"]['tags']['total_cores'])
+        time_start = float(r["trace"]['timestamp'])/1e6
+        duration = float(r["trace"]['duration'])/1e6
+        total_cores = int(r["trace"]['tags']['total_cores'])
 
-    task_plots = {'x': []}
-    for task in task_set:
-        task_plots[task] = []
-
-    task_plots['x'].append(0)
-    task_plots['x'].append(duration)
-    for task in task_set:
-        task_plots[task].append(0.)
-        task_plots[task].append(0.)
-
-    for t in tasks:
-        start = float(t['trace']['timestamp'])/1e6 - time_start
-        end = float(t['trace']['timestamp'] + t['trace']['duration'])/1e6 - time_start
-        name = t['trace']['localEndpoint']['serviceName']
-        task_plots['x'].append(start-1e-9)
-        task_plots['x'].append(start)
-        task_plots['x'].append(end-1.e-9)
-        task_plots['x'].append(end)
-        cores = float(t['trace']['tags']['cores_allocated'])
+        task_plots = {'x': []}
         for task in task_set:
-            if task == name:
-                task_plots[task].append(0.)
-                task_plots[task].append(cores)
-                task_plots[task].append(0.)
-                task_plots[task].append(-cores)
-            else:
-                task_plots[task].append(0.)
-                task_plots[task].append(0.)
-                task_plots[task].append(0.)
-                task_plots[task].append(0.)
+            task_plots[task] = []
+
+        task_plots['x'].append(0)
+        task_plots['x'].append(duration)
+        for task in task_set:
+            task_plots[task].append(0.)
+            task_plots[task].append(0.)
+
+        for t in tasks:
+            start = float(t['trace']['timestamp'])/1e6 - time_start
+            end = float(t['trace']['timestamp'] + t['trace']['duration'])/1e6 - time_start
+            name = t['trace']['localEndpoint']['serviceName']
+            task_plots['x'].append(start-1e-9)
+            task_plots['x'].append(start)
+            task_plots['x'].append(end-1.e-9)
+            task_plots['x'].append(end)
+            cores = float(t['trace']['tags']['cores_allocated'])
+            for task in task_set:
+                if task == name:
+                    task_plots[task].append(0.)
+                    task_plots[task].append(cores)
+                    task_plots[task].append(0.)
+                    task_plots[task].append(-cores)
+                else:
+                    task_plots[task].append(0.)
+                    task_plots[task].append(0.)
+                    task_plots[task].append(0.)
+                    task_plots[task].append(0.)
+    except KeyError as e:
+        return f"Unable to plot because missing {e} information", 500
 
     x = task_plots['x']
     sort_idx = np.argsort(x)
@@ -189,3 +198,8 @@ def resource_plot(runid):
                        f"Allocation total cores = {total_cores}",
                        legend_title_text="Tasks")
     return plot.to_html()
+
+
+@bp.route("/<path:invalid_path>")
+def page_not_found(invalid_path):
+    return render_template('404.html', path=invalid_path), 404
