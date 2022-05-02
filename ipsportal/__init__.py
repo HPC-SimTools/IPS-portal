@@ -25,7 +25,9 @@ def create_app(test_config=None):
     from . import db
     db.init_app(app)
 
-    from ipsportal import run
+    from ipsportal import run, resourceplot, trace
     app.register_blueprint(run.bp)
+    app.register_blueprint(resourceplot.bp)
+    app.register_blueprint(trace.bp)
 
     return app

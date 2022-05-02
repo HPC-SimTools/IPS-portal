@@ -62,7 +62,7 @@
     <td>Trace</td>
     {% if run.state == "Completed" %}
     {% if run.trace is defined %}
-    <td><a href="{{ url_for('.gettrace', runid=run.runid) }}">trace</a></td>
+    <td><a href="{{ url_for('trace.gettrace', runid=run.runid) }}">trace</a></td>
     {% else %}
     <td>no trace information available</td>
     {% endif %}
@@ -74,7 +74,7 @@
     <td>Resource usage</td>
     {% if run.state == "Completed" %}
     {% if run.trace is defined %}
-    <td><a href="{{ url_for('.resource_plot', runid=run.runid) }}">plot</a></td>
+    <td><a href="{{ url_for('resourceplot.resource_plot', runid=run.runid) }}">plot</a></td>
     {% else %}
     <td>no trace information available</td>
     {% endif %}
