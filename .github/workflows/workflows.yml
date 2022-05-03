@@ -21,11 +21,15 @@ jobs:
       run: mamba env update --file environment_dev.yml
     - name: Lint with flake8
       run: flake8
-    - name: Start MongoDB
-      uses: supercharge/mongodb-github-action@1.7.0
-      with:
-        mongodb-version: 4
+    - name: Start MongoDB and Jaeger
+      run: |
+        docker run --rm -p 27017:27017 --name mongo -d mongo:4
+        docker run --rm -p 9411:9411 -p 16686:16686 --env QUERY_BASE_PATH=/jaeger --env COLLECTOR_ZIPKIN_HOST_PORT=9411 --name jaeger -d jaegertracing/all-in-one:1.31
     - name: Run tests
       run: python -m pytest --cov --cov-report=xml --cov-report=term tests
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2
+    - name: Stop MongoDB and Jaeger
+      run: |
+        docker stop mongo
+        docker stop jaeger

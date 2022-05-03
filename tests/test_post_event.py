@@ -1,4 +1,5 @@
 from uuid import uuid1
+import hashlib
 
 
 def test_post_invalid_event(client):
@@ -132,8 +133,9 @@ def test_post_event(client):
     assert f"Simulation Ended {portal_runid}" in response.text
 
     response = client.get("/gettrace/0")
-    assert response.status_code == 500
-    assert "Unable to connect to jaeger" in response.text
+    assert response.status_code == 302
+    traceID = hashlib.md5(portal_runid.encode()).hexdigest()
+    assert f"/jaeger/trace/{traceID}" in response.text
 
     response = client.get("/resource_plot/0")
     assert response.status_code == 200
