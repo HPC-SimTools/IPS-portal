@@ -82,8 +82,3 @@ def event():
     db.event.insert_one(e)
 
     return ('success', 200)
-
-
-@bp.route("/<path:invalid_path>")
-def page_not_found(invalid_path):
-    return render_template('404.html', path=invalid_path), 404
