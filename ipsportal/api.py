@@ -27,40 +27,52 @@ api/event return runid must exist in run table
 @bp.route("/api/runs")
 def runs():
     db = get_db()
-    runs = db.run.find(projection={'_id': False, 'events': False})
+    runs = db.run.find(projection={'_id': False, 'events': False, 'traces': False})
     return jsonify(list(runs))
 
 
 @bp.route("/api/run/<int:runid>/events")
 def events_runid(runid):
     db = get_db()
-    r = db.run.find_one({'runid': runid}, projection={"portal_runid": True})
-    if r is None:
+    events = db.run.find_one({'runid': runid}, projection={'_id': False, 'events': True})
+    if events is None:
         return jsonify(message="not found"), 404
 
-    return events(portal_runid=r['portal_runid'])
+    return jsonify(events['events'])
+
+
+@bp.route("/api/run/<int:runid>")
+def run_runid(runid):
+    db = get_db()
+    run = db.run.find_one({'runid': runid}, projection={'_id': False, 'events': False, 'traces': False})
+    return jsonify(run)
 
 
 @bp.route("/api/run/<string:portal_runid>")
 def run(portal_runid):
     db = get_db()
-    run = db.run.find_one({'portal_runid': portal_runid}, projection={'_id': False})
+    run = db.run.find_one({'portal_runid': portal_runid}, projection={'_id': False, 'events': False, 'traces': False})
     return jsonify(run)
 
 
 @bp.route("/api/run/<string:portal_runid>/events")
 def events(portal_runid):
     db = get_db()
-    events = db.event.find({'portal_runid': portal_runid},
-                           projection={'_id': False, 'trace': False}).sort('seqnum', pymongo.DESCENDING)
-    return jsonify(list(events))
+    events = db.run.find_one({'portal_runid': portal_runid},
+                             projection={'_id': False, 'events': True})
+    return jsonify(events['events'])
 
 
 @bp.route("/api/run/<string:portal_runid>/trace")
 def trace(portal_runid):
     db = get_db()
-    traces = db.event.find({'portal_runid': portal_runid}, projection={'trace': True, '_id': False})
-    return jsonify([t['trace'] for t in traces if 'trace' in t])
+    db = get_db()
+    events = db.run.find_one({'portal_runid': portal_runid},
+                             projection={'_id': False, 'traces': True})
+    if events:
+        return jsonify(events['traces'])
+    else:
+        return jsonify([])
 
 
 @bp.route("/api/event", methods=['POST'])
@@ -68,6 +80,9 @@ def event():
     e = request.json
 
     required = {'code', 'eventtype', 'comment', 'walltime', 'phystimestamp', 'portal_runid', 'seqnum'}
+    run_keys = {'user', 'host', 'state', 'rcomment', 'tokamak', 'shotno', 'simname', 'startat',
+                'stopat', 'sim_runid', 'outputprefix', 'tag', 'ips_version', 'portal_runid'}
+
     if not e.keys() >= required:
         return jsonify(message='Invalid data'), 400
 
@@ -75,21 +90,30 @@ def event():
 
     db = get_db()
 
-    return_data = {}
-
     if e.get('eventtype') == "IPS_START":
         runid = db.run.count_documents({})
-        e['runid'] = runid
+        run_dict = {key: e[key] for key in run_keys if key in e}
+        run_dict['runid'] = runid
+        run_dict['events'] = [e]
+        run_dict['traces'] = []
         try:
-            db.run.insert_one(e)
+            db.run.insert_one(run_dict)
         except pymongo.errors.DuplicateKeyError:
             return jsonify(message="Duplicate Key"), 400
-        return_data['runid'] = runid
-    elif e.get('eventtype') == "IPS_END":
-        db.run.update_one({'portal_runid': e.get('portal_runid')}, {'$set': e})
+        return jsonify(message="New run created", runid=runid)
 
-    db.event.insert_one(e)
+    if 'trace' in e:
+        trace = e.pop('trace')
+        if db.run.find_one_and_update({'portal_runid': e.get('portal_runid')}, {"$push": {"traces": trace}}) is None:
+            return jsonify(message='Invalid portal_runid'), 400
 
-    return_data['message'] = 'success'
+    if db.run.find_one_and_update({'portal_runid': e.get('portal_runid')}, {"$push": {"events": e}}) is None:
+        return jsonify(message='Invalid portal_runid'), 400
 
-    return jsonify(return_data)
+    if e.get('eventtype') == "IPS_END":
+        run_dict = {key: e[key] for key in run_keys if key in e}
+        if db.run.find_one_and_update({'portal_runid': run_dict.get('portal_runid')}, {'$set': run_dict}) is None:
+            return jsonify(message='Invalid portal_runid'), 400
+        return jsonify(message="Event added to run and run ended")
+
+    return jsonify(message="Event added to run")
