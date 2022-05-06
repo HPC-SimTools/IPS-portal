@@ -38,6 +38,7 @@ def test_post_events(client):
     assert response.json['startat'] == start_event['startat']
     assert response.json['rcomment'] == start_event['rcomment']
     assert response.json['runid'] == runid
+    assert not response.json['has_trace']
 
     # retrieve run info by portal_runid
     response = client.get(f"/api/run/{portal_runid}")
@@ -47,6 +48,7 @@ def test_post_events(client):
     assert response.json['startat'] == start_event['startat']
     assert response.json['rcomment'] == start_event['rcomment']
     assert response.json['runid'] == runid
+    assert not response.json['has_trace']
 
     # Post a IPS_CALL_END event
     event = {
@@ -77,7 +79,7 @@ def test_post_events(client):
     assert "message" in response.json
     assert response.json["message"] == "Event added to run"
 
-    # check run info, should be unchanged from start
+    # check run info, should be unchanged from start except has_trace
     response = client.get(f"/api/run/{portal_runid}")
     assert response.status_code == 200
     assert response.json['portal_runid'] == start_event['portal_runid']
@@ -85,6 +87,7 @@ def test_post_events(client):
     assert response.json['startat'] == start_event['startat']
     assert response.json['rcomment'] == start_event['rcomment']
     assert response.json['runid'] == runid
+    assert response.json['has_trace']
 
     # Post a IPS_END event
     end_event = {
@@ -126,6 +129,7 @@ def test_post_events(client):
     assert response.json['startat'] == start_event['startat']
     assert response.json['stopat'] == end_event['stopat']
     assert response.json['runid'] == runid
+    assert response.json['has_trace'] == True
 
     # check events with runid
     response = client.get(f"/api/run/{runid}/events")
@@ -267,6 +271,7 @@ def test_runid_not_found(client):
     response = client.get("/api/run/10000000/trace")
     assert response.status_code == 404
     assert response.json['message'] == "runid 10000000 not found"
+
 
 def test_portal_runid_not_found(client):
     portal_runid = str(uuid1())

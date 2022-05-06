@@ -1,13 +1,6 @@
 from uuid import uuid1
 import hashlib
 
-
-def test_post_invalid_event(client):
-    response = client.post("/", json={})
-    assert response.text == "failed"
-    assert response.status_code == 400
-
-
 def test_post_invalid_run_number(client):
     run = 999999
     response = client.get(f"/{run}")

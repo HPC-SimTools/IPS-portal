@@ -1,8 +1,8 @@
 import os
 import hashlib
 import requests
-from flask import Blueprint, redirect, render_template, url_for
-from ipsportal.db import get_db
+from flask import Blueprint, redirect, url_for
+from . import api
 
 bp = Blueprint('trace', __name__)
 
@@ -11,12 +11,9 @@ JAEGER_HOSTNAME = os.environ.get('JAEGER_HOSTNAME', 'localhost')
 
 @bp.route("/gettrace/<int:runid>")
 def gettrace(runid):
-    db = get_db()
-    r = db.run.find_one({'runid': runid})
-    if r is None:
-        return render_template("notfound.html", run=runid)
+    run = api.run_runid(runid).json
 
-    portal_runid = r['portal_runid']
+    portal_runid = run['portal_runid']
     traceID = hashlib.md5(portal_runid.encode()).hexdigest()
 
     try:
@@ -25,16 +22,14 @@ def gettrace(runid):
         return f"Unable to connect to jaeger because:<br>{e}", 500
 
     if x.status_code != 200:
-        events = db.event.find({'portal_runid': r['portal_runid']})
-
-        spans = [e['trace'] for e in events if 'trace' in e]
+        trace = api.trace_runid(runid).json
 
         url = f'http://{JAEGER_HOSTNAME}:9411/api/v2/spans'
         headers = {'accept': 'application/json',
                    'Content-Type': 'application/json'}
 
         try:
-            x = requests.post(url, json=spans, headers=headers, timeout=1)
+            x = requests.post(url, json=trace, headers=headers, timeout=1)
         except requests.exceptions.ConnectionError as e:
             return f"Unable to create trace because:<br>{e}", 500
 

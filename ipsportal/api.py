@@ -5,6 +5,7 @@ from ipsportal.db import get_db
 
 bp = Blueprint('api', __name__)
 
+
 @bp.route("/api/runs")
 def runs():
     db = get_db()
@@ -72,6 +73,7 @@ def trace(portal_runid):
     return jsonify(run['traces'])
 
 
+@bp.route("/", methods=['POST'])
 @bp.route("/api/event", methods=['POST'])
 def event():
     e = request.json
@@ -93,6 +95,7 @@ def event():
         run_dict['runid'] = runid
         run_dict['events'] = [e]
         run_dict['traces'] = []
+        run_dict['has_trace'] = False
         try:
             db.runs.insert_one(run_dict)
         except pymongo.errors.DuplicateKeyError:
@@ -100,7 +103,8 @@ def event():
         return jsonify(message="New run created", runid=runid)
 
     if trace := e.pop('trace', False):
-        if db.runs.find_one_and_update({'portal_runid': e.get('portal_runid')}, {"$push": {"traces": trace}}) is None:
+        if db.runs.find_one_and_update({'portal_runid': e.get('portal_runid')},
+                                       {"$push": {"traces": trace}, "$set": {"has_trace": True}}) is None:
             return jsonify(message='Invalid portal_runid'), 400
 
     if db.runs.find_one_and_update({'portal_runid': e.get('portal_runid')}, {"$push": {"events": e}}) is None:

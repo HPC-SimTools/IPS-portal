@@ -1,32 +1,32 @@
 import plotly.graph_objects as go
 import numpy as np
-from flask import Blueprint, render_template, url_for
-from ipsportal.db import get_db
+from flask import Blueprint, url_for
+from . import api
 
 bp = Blueprint('resourceplot', __name__)
 
 
 @bp.route("/resource_plot/<int:runid>")
 def resource_plot(runid):
-    db = get_db()
-    r = db.run.find_one({'runid': runid})
-    if r is None:
-        return render_template("notfound.html", run=runid)
+    traces = api.trace_runid(runid).json
 
-    events = db.event.find({'portal_runid': r['portal_runid']})
+    # last trace should get the IPS_END event
+    try:
+        total_cores = traces[-1]['tags']['total_cores']
+        time_start = float(traces[-1]['timestamp'])/1e6
+        duration = float(traces[-1]['duration'])/1e6
+    except KeyError as e:
+        return f"Unable to plot because missing {e} information", 500
+
+    run = api.run_runid(runid).json
 
     tasks = []
     task_set = set()
-
     try:
-        for ev in events:
-            if ev["eventtype"] == "IPS_TASK_END":
-                tasks.append(ev)
-                task_set.add(ev['trace']['localEndpoint']['serviceName'])
-
-        time_start = float(r["trace"]['timestamp'])/1e6
-        duration = float(r["trace"]['duration'])/1e6
-        total_cores = int(r["trace"]['tags']['total_cores'])
+        for trace in traces:
+            if 'tags' in trace and 'cores_allocated' in trace['tags']:
+                tasks.append(trace)
+                task_set.add(trace['localEndpoint']['serviceName'])
 
         task_plots = {'x': []}
         for task in task_set:
@@ -39,14 +39,14 @@ def resource_plot(runid):
             task_plots[task].append(0.)
 
         for t in tasks:
-            start = float(t['trace']['timestamp'])/1e6 - time_start
-            end = float(t['trace']['timestamp'] + t['trace']['duration'])/1e6 - time_start
-            name = t['trace']['localEndpoint']['serviceName']
+            start = float(t['timestamp'])/1e6 - time_start
+            end = float(t['timestamp'] + t['duration'])/1e6 - time_start
+            name = t['localEndpoint']['serviceName']
             task_plots['x'].append(start-1e-9)
             task_plots['x'].append(start)
             task_plots['x'].append(end-1.e-9)
             task_plots['x'].append(end)
-            cores = float(t['trace']['tags']['cores_allocated'])
+            cores = float(t['tags']['cores_allocated'])
             for task in task_set:
                 if task == name:
                     task_plots[task].append(0.)
@@ -80,7 +80,7 @@ def resource_plot(runid):
                       range=(0, total_cores))
     link = url_for('index.run', runid=runid)
     plot.update_layout(title=f"<a href='{link}'>Run - {runid}</a> "
-                       f"Sim Name: {r['sim_name']} Comment: {r['rcomment']}<br>"
+                       f"Sim Name: {run['simname']} Comment: {run['rcomment']}<br>"
                        f"Allocation total cores = {total_cores}",
                        legend_title_text="Tasks")
     return plot.to_html()

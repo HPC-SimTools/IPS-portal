@@ -1,9 +1,5 @@
-import json
-import time
-import pymongo
-import math
 from flask import Blueprint, render_template, request
-from ipsportal.db import get_db
+from . import api
 
 bp = Blueprint('index', __name__)
 
@@ -23,13 +19,12 @@ INDEX_COLUMNS = ({'name': 'RunID', 'param': 'runid'},
 
 @bp.route("/")
 def index():
-    db = get_db()
     page = {}
     page['page'] = request.args.get('page', 1, type=int)
     page['rows'] = request.args.get('rows', ROWS_PER_PAGE, type=int)
     page['rows'] = max(page['rows'], 5)
     page['rows_default'] = ROWS_PER_PAGE
-    page['num_pages'] = math.ceil(db.run.estimated_document_count() / page['rows'])
+    page['num_pages'] = 1
     page['page'] = min(page['page'], page['num_pages'])
 
     sort = {}
@@ -43,42 +38,9 @@ def index():
         sort['direction'] = SORT_DIRECTION_DEFAULT
     sort['sortable'] = SORTABLE
 
-    runs = db.run.find(skip=max((page['page']-1)*page['rows'], 0),
-                       limit=page['rows']
-                       ).sort(sort['by'], sort['direction'])
-    return render_template("index.html", columns=INDEX_COLUMNS, runs=runs, page=page, sort=sort)
+    return render_template("index.html", columns=INDEX_COLUMNS, runs=api.runs().json, page=page, sort=sort)
 
 
 @bp.route("/<int:runid>")
 def run(runid):
-    db = get_db()
-    r = db.run.find_one({'runid': runid})
-    if r is None:
-        return render_template("notfound.html", run=runid), 404
-
-    events = db.event.find({'portal_runid': r['portal_runid']}).sort('seqnum', pymongo.DESCENDING)
-
-    return render_template("events.html", run=r, events=events)
-
-
-@bp.route("/", methods=("POST", "GET"))
-def event():
-    e = json.loads(request.data)
-
-    required = {'code', 'eventtype', 'comment', 'walltime', 'phystimestamp', 'portal_runid', 'seqnum'}
-    if not e.keys() >= required:
-        return ('failed', 400)
-
-    e['created'] = time.strftime('%Y-%m-%d|%H:%M:%S%Z', time.localtime())
-
-    db = get_db()
-
-    if e.get('eventtype') == "IPS_START":
-        e['runid'] = db.run.estimated_document_count()
-        db.run.insert_one(e)
-    elif e.get('eventtype') == "IPS_END":
-        db.run.update_one({'portal_runid': e.get('portal_runid')}, {'$set': e})
-
-    db.event.insert_one(e)
-
-    return ('success', 200)
+    return render_template("events.html", run=api.run_runid(runid).json, events=api.events_runid(runid).json)
