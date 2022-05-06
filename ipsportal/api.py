@@ -63,9 +63,18 @@ def events(portal_runid):
     return jsonify(events['events'])
 
 
+@bp.route("/api/run/<int:runid>/trace")
+def trace_runid(runid):
+    db = get_db()
+    events = db.run.find_one({'runid': runid},
+                             projection={'_id': False, 'traces': True})
+    if events:
+        return jsonify(events['traces'])
+    else:
+        return jsonify([])
+
 @bp.route("/api/run/<string:portal_runid>/trace")
 def trace(portal_runid):
-    db = get_db()
     db = get_db()
     events = db.run.find_one({'portal_runid': portal_runid},
                              projection={'_id': False, 'traces': True})
@@ -102,8 +111,7 @@ def event():
             return jsonify(message="Duplicate Key"), 400
         return jsonify(message="New run created", runid=runid)
 
-    if 'trace' in e:
-        trace = e.pop('trace')
+    if trace := e.pop('trace'):
         if db.run.find_one_and_update({'portal_runid': e.get('portal_runid')}, {"$push": {"traces": trace}}) is None:
             return jsonify(message='Invalid portal_runid'), 400
 
