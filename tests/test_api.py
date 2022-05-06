@@ -1,4 +1,6 @@
 from uuid import uuid1
+import os
+from pymongo import MongoClient
 
 
 def test_post_events(client):
@@ -129,7 +131,7 @@ def test_post_events(client):
     assert response.json['startat'] == start_event['startat']
     assert response.json['stopat'] == end_event['stopat']
     assert response.json['runid'] == runid
-    assert response.json['has_trace'] == True
+    assert response.json['has_trace']
 
     # check events with runid
     response = client.get(f"/api/run/{runid}/events")
@@ -286,3 +288,54 @@ def test_portal_runid_not_found(client):
     response = client.get(f"/api/run/{portal_runid}/trace")
     assert response.status_code == 404
     assert response.json['message'] == f"portal_runid {portal_runid} not found"
+
+
+def test_run_pagination(client):
+    # Drop all runs
+    MongoClient('mongodb://'+os.environ.get('MONGODB_HOSTNAME', 'localhost')+':27017').portal.drop_collection('runs')
+
+    assert len(client.get("/api/runs").json) == 0
+
+    # Add lots of new runs
+    for i in range(100):
+        event = {
+            'code': "Framework",
+            'eventtype': "IPS_START",
+            "ok": True,
+            'comment': f"Starting IPS Simulation {i}",
+            'walltime': "0.01",
+            "state": "Running",
+            "startat": "2022-05-03|15:41:07EDT",
+            "rcomment": f"CI Test {i}",
+            'phystimestamp': -1,
+            'portal_runid': str(uuid1()),
+            'seqnum': 0}
+        client.post("/api/event", json=event)
+
+    assert len(client.get("/api/runs").json) == 100
+
+    response = client.get("/api/runs", json={"per_page": 2})
+    assert len(response.json) == 2
+    assert response.json[0]['rcomment'] == 'CI Test 99'
+    assert response.json[1]['rcomment'] == 'CI Test 98'
+
+    response = client.get("/api/runs", json={"per_page": 2, 'sort_direction': 1})
+    assert len(response.json) == 2
+    assert response.json[0]['rcomment'] == 'CI Test 0'
+    assert response.json[1]['rcomment'] == 'CI Test 1'
+
+    response = client.get("/api/runs", json={"per_page": 2, "page": 10, 'sort_direction': 1})
+    assert len(response.json) == 2
+    assert response.json[0]['rcomment'] == 'CI Test 18'
+    assert response.json[1]['rcomment'] == 'CI Test 19'
+
+    response = client.get("/api/runs", json={"per_page": 1000})
+    assert len(response.json) == 100
+
+    response = client.get("/api/runs", json={"page": 1000})
+    assert len(response.json) == 0
+
+    response = client.get("/api/runs", json={"per_page": 2, 'sort_by': 'rcomment'})
+    assert len(response.json) == 2
+    assert response.json[0]['rcomment'] == 'CI Test 99'
+    assert response.json[1]['rcomment'] == 'CI Test 98'

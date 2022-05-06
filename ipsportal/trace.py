@@ -11,7 +11,7 @@ JAEGER_HOSTNAME = os.environ.get('JAEGER_HOSTNAME', 'localhost')
 
 @bp.route("/gettrace/<int:runid>")
 def gettrace(runid):
-    run = api.run_runid(runid).json
+    run = api.db_run_runid(runid)
 
     portal_runid = run['portal_runid']
     traceID = hashlib.md5(portal_runid.encode()).hexdigest()
@@ -22,7 +22,7 @@ def gettrace(runid):
         return f"Unable to connect to jaeger because:<br>{e}", 500
 
     if x.status_code != 200:
-        trace = api.trace_runid(runid).json
+        trace = api.db_trace_runid(runid)
 
         url = f'http://{JAEGER_HOSTNAME}:9411/api/v2/spans'
         headers = {'accept': 'application/json',

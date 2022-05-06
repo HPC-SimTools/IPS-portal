@@ -8,7 +8,7 @@ bp = Blueprint('resourceplot', __name__)
 
 @bp.route("/resource_plot/<int:runid>")
 def resource_plot(runid):
-    traces = api.trace_runid(runid).json
+    traces = api.db_trace_runid(runid)
 
     # last trace should get the IPS_END event
     try:
@@ -18,7 +18,7 @@ def resource_plot(runid):
     except KeyError as e:
         return f"Unable to plot because missing {e} information", 500
 
-    run = api.run_runid(runid).json
+    run = api.db_run_runid(runid)
 
     tasks = []
     task_set = set()

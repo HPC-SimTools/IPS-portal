@@ -6,27 +6,58 @@ from ipsportal.db import get_db
 bp = Blueprint('api', __name__)
 
 
+def db_runs(json=None):
+    db = get_db()
+    if json:
+        limit = json.get('per_page', 20)
+        skip = (json.get('page', 1)-1) * limit
+        sort_by = json.get('sort_by', 'runid')
+        sort_direction = json.get('sort_direction', -1)
+        runs = db.runs.find(skip=skip, limit=limit,
+                            projection={'_id': False, 'events': False, 'traces': False}
+                            ).sort(sort_by, sort_direction)
+    else:
+        runs = db.runs.find(projection={'_id': False, 'events': False, 'traces': False})
+    return list(runs)
+
+
 @bp.route("/api/runs")
 def runs():
+    if request.is_json:
+        return jsonify(db_runs(json=request.json))
+
+    return jsonify(db_runs())
+
+
+def runs_count():
+    return get_db().runs.count_documents({})
+
+
+def db_events_runid(runid):
     db = get_db()
-    runs = db.runs.find(projection={'_id': False, 'events': False, 'traces': False})
-    return jsonify(list(runs))
+    runs = db.runs.find_one({'runid': runid}, projection={'_id': False, 'events': True})
+    if runs is None:
+        return None
+    return runs['events']
 
 
 @bp.route("/api/run/<int:runid>/events")
 def events_runid(runid):
-    db = get_db()
-    events = db.runs.find_one({'runid': runid}, projection={'_id': False, 'events': True})
+    events = db_events_runid(runid)
     if events is None:
         return jsonify(message=f"runid {runid} not found"), 404
 
-    return jsonify(events['events'])
+    return jsonify(events)
+
+
+def db_run_runid(runid):
+    db = get_db()
+    return db.runs.find_one({'runid': runid}, projection={'_id': False, 'events': False, 'traces': False})
 
 
 @bp.route("/api/run/<int:runid>")
 def run_runid(runid):
-    db = get_db()
-    run = db.runs.find_one({'runid': runid}, projection={'_id': False, 'events': False, 'traces': False})
+    run = db_run_runid(runid)
     if run is None:
         return jsonify(message=f"runid {runid} not found"), 404
     return jsonify(run)
@@ -51,15 +82,23 @@ def events(portal_runid):
     return jsonify(run['events'])
 
 
-@bp.route("/api/run/<int:runid>/trace")
-def trace_runid(runid):
+def db_trace_runid(runid):
     db = get_db()
     run = db.runs.find_one({'runid': runid},
                            projection={'_id': False, 'traces': True})
     if run is None:
+        return None
+
+    return run['traces']
+
+
+@bp.route("/api/run/<int:runid>/trace")
+def trace_runid(runid):
+    traces = db_trace_runid(runid)
+    if traces is None:
         return jsonify(message=f"runid {runid} not found"), 404
 
-    return jsonify(run['traces'])
+    return jsonify(traces)
 
 
 @bp.route("/api/run/<string:portal_runid>/trace")
@@ -90,7 +129,7 @@ def event():
     db = get_db()
 
     if e.get('eventtype') == "IPS_START":
-        runid = db.runs.count_documents({})
+        runid = runs_count()
         run_dict = {key: e[key] for key in run_keys if key in e}
         run_dict['runid'] = runid
         run_dict['events'] = [e]

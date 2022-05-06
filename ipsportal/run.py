@@ -1,3 +1,4 @@
+import math
 from flask import Blueprint, render_template, request
 from . import api
 
@@ -24,7 +25,7 @@ def index():
     page['rows'] = request.args.get('rows', ROWS_PER_PAGE, type=int)
     page['rows'] = max(page['rows'], 5)
     page['rows_default'] = ROWS_PER_PAGE
-    page['num_pages'] = 1
+    page['num_pages'] = math.ceil(api.runs_count() / page['rows'])
     page['page'] = min(page['page'], page['num_pages'])
 
     sort = {}
@@ -38,9 +39,14 @@ def index():
         sort['direction'] = SORT_DIRECTION_DEFAULT
     sort['sortable'] = SORTABLE
 
-    return render_template("index.html", columns=INDEX_COLUMNS, runs=api.runs().json, page=page, sort=sort)
+    json = {"page": page['page'],
+            "per_page": page['rows'],
+            "sort_by": sort['by'],
+            "sort_direction": sort['direction']}
+
+    return render_template("index.html", columns=INDEX_COLUMNS, runs=api.db_runs(json), page=page, sort=sort)
 
 
 @bp.route("/<int:runid>")
 def run(runid):
-    return render_template("events.html", run=api.run_runid(runid).json, events=api.events_runid(runid).json)
+    return render_template("events.html", run=api.db_run_runid(runid), events=api.db_events_runid(runid))
