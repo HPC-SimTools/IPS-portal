@@ -170,3 +170,114 @@ def test_post_events(client):
     assert len(response.json) == 2
     assert response.json[0] == trace1
     assert response.json[1] == trace2
+
+
+def test_invalid_portal_id(client):
+    # this isn't a IPS_START event so this portal_runid is invalid
+    portal_runid = str(uuid1())
+
+    event = {
+        "code": "Framework",
+        "eventtype": "IPS_CALL_END",
+        "comment": "Target = sim@driver@2:finalize(0)",
+        "walltime": "1.0",
+        "phystimestamp": 0,
+        "portal_runid": portal_runid,
+        "seqnum": 1
+    }
+    response = client.post("/api/event", json=event)
+
+    assert response.status_code == 400
+    assert "message" in response.json
+    assert response.json["message"] == "Invalid portal_runid"
+
+    event = {
+        "code": "Framework",
+        "eventtype": "IPS_CALL_END",
+        "comment": "Target = sim@driver@2:finalize(0)",
+        "walltime": "1.0",
+        "phystimestamp": 0,
+        "portal_runid": portal_runid,
+        "seqnum": 1,
+        "trace": {"timestamp": 1651606867984607}
+    }
+    response = client.post("/api/event", json=event)
+
+    assert response.status_code == 400
+    assert "message" in response.json
+    assert response.json["message"] == "Invalid portal_runid"
+
+
+def test_missing_json(client):
+    response = client.post("/api/event", json={})
+    assert response.status_code == 400
+    assert response.json['message'] == "Missing required data: "\
+        "['code', 'comment', 'eventtype', 'phystimestamp', 'portal_runid', 'seqnum', 'walltime']"
+
+    response = client.post("/api/event",
+                           json={"code": "Framework",
+                                 "eventtype": "IPS_CALL_END",
+                                 "comment": "Target = sim@driver@2:finalize(0)",
+                                 "walltime": "1.0",
+                                 "phystimestamp": 0})
+    assert response.status_code == 400
+    assert response.json['message'] == "Missing required data: ['portal_runid', 'seqnum']"
+
+
+def test_duplicate_portal_runid(client):
+    # Try sending two IPS_START events with the same portal_runid
+    portal_runid = str(uuid1())
+
+    start_event = {
+        'code': "Framework",
+        'eventtype': "IPS_START",
+        "ok": True,
+        'comment': f"Starting IPS Simulation {portal_runid}",
+        'walltime': "0.01",
+        "state": "Running",
+        "startat": "2022-05-03|15:41:07EDT",
+        "rcomment": f"CI Test {portal_runid}",
+        'phystimestamp': -1,
+        'portal_runid': portal_runid,
+        'seqnum': 0}
+    response = client.post("/api/event", json=start_event)
+
+    assert response.status_code == 200
+    assert "message" in response.json
+    assert response.json["message"] == "New run created"
+    assert 'runid' in response.json
+
+    # this should fail
+    response = client.post("/api/event", json=start_event)
+    assert response.status_code == 400
+    assert "message" in response.json
+    assert response.json["message"] == "Duplicate portal_runid Key"
+    assert 'runid' not in response.json
+
+
+def test_runid_not_found(client):
+    response = client.get("/api/run/10000000")
+    assert response.status_code == 404
+    assert response.json['message'] == "runid 10000000 not found"
+
+    response = client.get("/api/run/10000000/events")
+    assert response.status_code == 404
+    assert response.json['message'] == "runid 10000000 not found"
+
+    response = client.get("/api/run/10000000/trace")
+    assert response.status_code == 404
+    assert response.json['message'] == "runid 10000000 not found"
+
+def test_portal_runid_not_found(client):
+    portal_runid = str(uuid1())
+    response = client.get(f"/api/run/{portal_runid}")
+    assert response.status_code == 404
+    assert response.json['message'] == f"portal_runid {portal_runid} not found"
+
+    response = client.get(f"/api/run/{portal_runid}/events")
+    assert response.status_code == 404
+    assert response.json['message'] == f"portal_runid {portal_runid} not found"
+
+    response = client.get(f"/api/run/{portal_runid}/trace")
+    assert response.status_code == 404
+    assert response.json['message'] == f"portal_runid {portal_runid} not found"
