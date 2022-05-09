@@ -1,6 +1,6 @@
 Deploy
  - Name: db
- - Docker Image: mongo:4
+ - Docker Image: mongo:5
  - Namespace: ipsportal
  - Volume:
    - Add Volume: Add a new persistent volume (claim)

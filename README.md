@@ -27,8 +27,8 @@ Go to http://localhost:5000
 ### Requires mongo
 
 ```shell
-docker pull mongo:4
-docker run --rm -p 27017:27017 -v /tmp/db:/data/db mongo:4
+docker pull mongo:5
+docker run --rm -p 27017:27017 -v /tmp/db:/data/db mongo:5
 ```
 
 ### For profile tracing
