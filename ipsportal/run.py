@@ -1,6 +1,6 @@
 import math
 from flask import Blueprint, render_template, request
-from . import api
+from ipsportal.db import get_runs, get_run, get_events, runs_count
 
 bp = Blueprint('index', __name__)
 
@@ -25,7 +25,7 @@ def index():
     page['rows'] = request.args.get('rows', ROWS_PER_PAGE, type=int)
     page['rows'] = max(page['rows'], 5)
     page['rows_default'] = ROWS_PER_PAGE
-    page['num_pages'] = math.ceil(api.runs_count() / page['rows'])
+    page['num_pages'] = math.ceil(runs_count() / page['rows'])
     page['page'] = min(page['page'], page['num_pages'])
 
     sort = {}
@@ -44,9 +44,12 @@ def index():
             "sort_by": sort['by'],
             "sort_direction": sort['direction']}
 
-    return render_template("index.html", columns=INDEX_COLUMNS, runs=api.db_runs(json), page=page, sort=sort)
+    return render_template("index.html", columns=INDEX_COLUMNS, runs=get_runs(json), page=page, sort=sort)
 
 
 @bp.route("/<int:runid>")
-def run(runid):
-    return render_template("events.html", run=api.db_run_runid(runid), events=api.db_events_runid(runid))
+def run(runid: int):
+    run = get_run({'runid': runid})
+    if run is None:
+        return render_template("notfound.html", run=runid)
+    return render_template("events.html", run=run, events=get_events({"runid": runid}))

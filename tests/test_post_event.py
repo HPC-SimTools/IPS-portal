@@ -1,6 +1,7 @@
 from uuid import uuid1
 import hashlib
 
+
 def test_post_invalid_run_number(client):
     run = 999999
     response = client.get(f"/{run}")

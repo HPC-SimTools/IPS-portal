@@ -2,7 +2,7 @@ import os
 import hashlib
 import requests
 from flask import Blueprint, redirect, url_for
-from . import api
+from ipsportal.db import get_trace, get_run
 
 bp = Blueprint('trace', __name__)
 
@@ -11,7 +11,7 @@ JAEGER_HOSTNAME = os.environ.get('JAEGER_HOSTNAME', 'localhost')
 
 @bp.route("/gettrace/<int:runid>")
 def gettrace(runid):
-    run = api.db_run_runid(runid)
+    run = get_run({"runid": runid})
 
     portal_runid = run['portal_runid']
     traceID = hashlib.md5(portal_runid.encode()).hexdigest()
@@ -22,7 +22,7 @@ def gettrace(runid):
         return f"Unable to connect to jaeger because:<br>{e}", 500
 
     if x.status_code != 200:
-        trace = api.db_trace_runid(runid)
+        trace = get_trace({"runid": runid})
 
         url = f'http://{JAEGER_HOSTNAME}:9411/api/v2/spans'
         headers = {'accept': 'application/json',

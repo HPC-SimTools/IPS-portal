@@ -1,14 +1,14 @@
 import plotly.graph_objects as go
 import numpy as np
 from flask import Blueprint, url_for
-from . import api
+from ipsportal.db import get_trace, get_run
 
 bp = Blueprint('resourceplot', __name__)
 
 
 @bp.route("/resource_plot/<int:runid>")
 def resource_plot(runid):
-    traces = api.db_trace_runid(runid)
+    traces = get_trace({"runid": runid})
 
     # last trace should get the IPS_END event
     try:
@@ -18,7 +18,7 @@ def resource_plot(runid):
     except KeyError as e:
         return f"Unable to plot because missing {e} information", 500
 
-    run = api.db_run_runid(runid)
+    run = get_run({"runid": runid})
 
     tasks = []
     task_set = set()
