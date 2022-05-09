@@ -51,5 +51,5 @@ def index():
 def run(runid: int):
     run = get_run({'runid': runid})
     if run is None:
-        return render_template("notfound.html", run=runid)
+        return render_template("notfound.html", run=runid), 404
     return render_template("events.html", run=run, events=get_events({"runid": runid}))

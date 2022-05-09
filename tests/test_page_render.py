@@ -23,11 +23,13 @@ def test_post_event(client):
         "rcomment": f"CI Test {portal_runid}",
         'phystimestamp': -1,
         'portal_runid': portal_runid,
-        'seqnum': 0
+        'seqnum': 0,
+        'simname': 'CI Test'
     }
     )
-    assert response.text == "success"
     assert response.status_code == 200
+    assert response.json['message'] == 'New run created'
+    runid = response.json['runid']
 
     response = client.post("/", json={
         "code": "WORKER__worker",
@@ -58,8 +60,8 @@ def test_post_event(client):
     }
     )
 
-    assert response.text == "success"
     assert response.status_code == 200
+    assert response.json['message'] == "Event added to run"
 
     response = client.post("/", json={
           "code": "Framework",
@@ -84,8 +86,8 @@ def test_post_event(client):
           "seqnum": 2
         }
     )
-    assert response.text == "success"
     assert response.status_code == 200
+    assert response.json['message'] == "Event added to run"
 
     response = client.post("/", json={
         'code': "Framework",
@@ -113,25 +115,25 @@ def test_post_event(client):
         }
     })
 
-    assert response.text == "success"
     assert response.status_code == 200
+    assert response.json['message'] == "Event added to run and run ended"
 
     response = client.get("/")
     assert response.status_code == 200
     assert f"CI Test {portal_runid}" in response.text
 
-    response = client.get("/0")
+    response = client.get(f"/{runid}")
     assert response.status_code == 200
     assert f"CI Test {portal_runid}" in response.text
     assert f"Starting IPS Simulation {portal_runid}" in response.text
     assert f"Simulation Ended {portal_runid}" in response.text
 
-    response = client.get("/gettrace/0")
+    response = client.get(f"/gettrace/{runid}")
     assert response.status_code == 302
     traceID = hashlib.md5(portal_runid.encode()).hexdigest()
     assert f"/jaeger/trace/{traceID}" in response.text
 
-    response = client.get("/resource_plot/0")
+    response = client.get(f"/resource_plot/{runid}")
     assert response.status_code == 200
-    assert "<a href='/0'>Run - 0</a> Sim Name: CI Test Comment: " \
+    assert f"<a href='/{runid}'>Run - {runid}</a> Sim Name: CI Test Comment: " \
         f"CI Test {portal_runid}<br>Allocation total cores = 8" in response.text
