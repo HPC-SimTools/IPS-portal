@@ -1,11 +1,16 @@
 <!doctype html>
 <title>{% block title %}{% endblock %} - IPS Portal</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
 <nav>
   <h1><a href="{{ url_for('index.index') }} ">IPS Portal</a></h1>
 </nav>
 <section class="content">
   <header>
+    <script
+      src="https://code.jquery.com/jquery-3.6.0.min.js"
+      integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+      crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
     {% block header %}{% endblock %}
   </header>
   {% for message in get_flashed_messages() %}

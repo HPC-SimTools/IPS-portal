@@ -4,10 +4,6 @@ from ipsportal.db import get_runs, get_run, get_events, runs_count
 
 bp = Blueprint('index', __name__)
 
-ROWS_PER_PAGE = 20
-SORT_BY_DEFAULT = 'runid'
-SORT_DIRECTION_DEFAULT = -1
-SORTABLE = ('runid', 'state', 'rcomment', 'simname', 'host', 'user')
 INDEX_COLUMNS = ({'name': 'RunID', 'param': 'runid'},
                  {'name': 'Status', 'param': 'state'},
                  {'name': 'Comment', 'param': 'rcomment'},
@@ -20,31 +16,7 @@ INDEX_COLUMNS = ({'name': 'RunID', 'param': 'runid'},
 
 @bp.route("/")
 def index():
-    page = {}
-    page['page'] = request.args.get('page', 1, type=int)
-    page['rows'] = request.args.get('rows', ROWS_PER_PAGE, type=int)
-    page['rows'] = max(page['rows'], 5)
-    page['rows_default'] = ROWS_PER_PAGE
-    page['num_pages'] = math.ceil(runs_count() / page['rows'])
-    page['page'] = min(page['page'], page['num_pages'])
-
-    sort = {}
-    sort['by'] = request.args.get('sort', SORT_BY_DEFAULT)
-    sort['default'] = SORT_BY_DEFAULT
-    if sort['by'] not in SORTABLE:
-        sort['by'] = SORT_BY_DEFAULT
-    sort['direction'] = request.args.get('direction', SORT_DIRECTION_DEFAULT, type=int)
-    sort['direction_default'] = SORT_DIRECTION_DEFAULT
-    if sort['direction'] not in (1, -1):
-        sort['direction'] = SORT_DIRECTION_DEFAULT
-    sort['sortable'] = SORTABLE
-
-    json = {"page": page['page'],
-            "per_page": page['rows'],
-            "sort_by": sort['by'],
-            "sort_direction": sort['direction']}
-
-    return render_template("index.html", columns=INDEX_COLUMNS, runs=get_runs(json), page=page, sort=sort)
+    return render_template("index.html", columns=INDEX_COLUMNS, runs=get_runs())
 
 
 @bp.route("/<int:runid>")
