@@ -8,9 +8,6 @@ bp = Blueprint('api', __name__)
 
 @bp.route("/api/runs")
 def runs():
-    if request.is_json:
-        return jsonify(get_runs(json=request.json))
-
     return jsonify(get_runs())
 
 

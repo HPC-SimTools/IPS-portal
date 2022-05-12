@@ -1,6 +1,5 @@
-import math
-from flask import Blueprint, render_template, request
-from ipsportal.db import get_runs, get_run, get_events, runs_count
+from flask import Blueprint, render_template
+from ipsportal.db import get_runs, get_run, get_events
 
 bp = Blueprint('index', __name__)
 

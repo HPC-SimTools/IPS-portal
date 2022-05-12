@@ -29,18 +29,8 @@ def init_app(app):
 db = LocalProxy(get_db)
 
 
-def get_runs(json=None):
-    if json:
-        limit = json.get('per_page', 20)
-        skip = (json.get('page', 1)-1) * limit
-        sort_by = json.get('sort_by', 'runid')
-        sort_direction = json.get('sort_direction', -1)
-        runs = db.runs.find(skip=skip, limit=limit,
-                            projection={'_id': False, 'events': False, 'traces': False}
-                            ).sort(sort_by, sort_direction)
-    else:
-        runs = db.runs.find(projection={'_id': False, 'events': False, 'traces': False})
-    return list(runs)
+def get_runs():
+    return list(db.runs.find(projection={'_id': False, 'events': False, 'traces': False}))
 
 
 def runs_count():
