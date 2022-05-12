@@ -1,5 +1,5 @@
 $(document).ready( function () {
-    $('#index-table').DataTable( {
+    $('#runs-table').DataTable( {
         "order": [[ 0, "desc" ]]
     } );
 } );

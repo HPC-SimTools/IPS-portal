@@ -1,11 +1,13 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<h1>{% block title %}Run - {{ run.runid }}{% endblock %}</h1>
+<h4>{% block title %}Run - {{ run.runid }}{% endblock %}</h4>
+<script src="{{ url_for('static', filename='event-table.js') }}" defer></script>
 {% endblock %}
 
 {% block content %}
-<table style="width:50%">
+<table class="table table-sm table-primary table-bordered" style="width:50%">
+  <tbody>
   <tr>
     <td>User</td>
     <td>{{ run.user }}</td>
@@ -82,9 +84,12 @@
     <td>wait for run to finish</td>
     {% endif %}
   </tr>
+  </tbody>
 </table>
-<h1>Events</h1>
-<table style="width:100%">
+<h4>Events</h4>
+<div class="table-responsive">
+<table id="event-table" class="table table-striped table-secondary table-bordered" style="width:100%">
+  <thead>
   <tr>
     <th>Time</th>
     <th>Seq Num</th>
@@ -94,6 +99,8 @@
     <th>Physics Time</th>
     <th>Comment</th>
   </tr>
+  </thead>
+  <tbody>
   {% for event in events%}
   <tr>
     <td>{{ event.created }}</td>
@@ -105,5 +112,7 @@
     <td>{{ event.comment }}</td>
   </tr>
   {% endfor %}
+  </tbody>
 </table>
+</div>
 {% endblock %}

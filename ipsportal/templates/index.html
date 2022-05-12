@@ -1,35 +1,27 @@
 {% extends 'base.html' %}
 
 {% block header %}
-<script src="{{ url_for('static', filename='script.js') }}" defer></script>
+<script src="{{ url_for('static', filename='runs-table.js') }}" defer></script>
 
-<h1>{% block title %}Runs{% endblock %}</h1>
+<h4>{% block title %}Run Index{% endblock %}</h4>
 {% endblock %}
 
 {% block content %}
 
-<table id="index-table" class="display">
+<div class="table-responsive">
+<table id="runs-table" class="table table-striped table-bordered" style="width:100%">
   <thead>
-    <tr>
-      {% for column in columns %}
-      <th>{{ column.name }}</th>
-      {% endfor %}
+    <tr> {% for column in columns %}
+      <th>{{ column.name }}</th> {% endfor %}
     </tr>
   </thead>
   <tbody>
-  {% for run in runs%}
-  <tr>
-    {% for column in columns %}
-    {% if column.param == 'runid' %}
-    <td><a href="{{ url_for('.run', runid=run.runid) }}">{{ run.runid }}</a></td>
-    {% else %}
-    <td>{{ run.get(column.param) }}</td>
-    {% endif %}
-    {% endfor %}
-  </tr>
-  {% endfor %}
+    {% for run in runs%}
+    <tr> {% for column in columns %}{% if column.param == 'runid' %}
+      <td><a href="{{ url_for('.run', runid=run.runid) }}">{{ run.runid }}</a></td> {% else %} <td>{{ run.get(column.param) }}</td> {% endif %}
+      {% endfor %} </tr> {% endfor %}
   </tbody>
 </table>
-
+</div>
 
 {% endblock %}
