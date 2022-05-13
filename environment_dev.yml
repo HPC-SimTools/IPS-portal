@@ -1,6 +1,0 @@
-channels:
-  - conda-forge
-dependencies:
-  - flake8=4.0.1
-  - pytest
-  - pytest-cov
