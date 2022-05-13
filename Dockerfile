@@ -1,8 +1,6 @@
-FROM continuumio/miniconda3
+FROM python:3.9
 
 ADD . /code
-RUN conda env update --name base --file /code/environment.yml
-
 RUN cd /code && python -m pip install .
 RUN rm -r /code
 

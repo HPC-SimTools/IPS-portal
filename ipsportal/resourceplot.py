@@ -1,5 +1,4 @@
 import plotly.graph_objects as go
-import numpy as np
 from flask import Blueprint, url_for
 from ipsportal.db import get_trace, get_run
 
@@ -61,17 +60,15 @@ def resource_plot(runid):
     except KeyError as e:
         return f"Unable to plot because missing {e} information", 500
 
-    x = task_plots['x']
-    sort_idx = np.argsort(x)
-
     plot = go.Figure()
-    for task, y in task_plots.items():
-        if task == 'x':
-            continue
+    for task in task_set:
+        # sort x and y arrays by x
+        x, y = list(zip(*sorted(zip(task_plots['x'], task_plots[task]))))
+
         plot.add_trace(go.Scatter(
             name=task,
-            x=np.asarray(x)[sort_idx],
-            y=np.cumsum(np.asarray(y)[sort_idx]),
+            x=x,
+            y=[sum(y[:n+1]) for n in range(len(y))],  # cumsum
             stackgroup='one'
         ))
 
