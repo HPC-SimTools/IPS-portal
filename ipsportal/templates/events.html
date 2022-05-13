@@ -9,59 +9,59 @@
 <table class="table table-sm table-primary table-bordered" style="width:50%">
   <tbody>
   <tr>
-    <td>User</td>
+    <th>User</th>
     <td>{{ run.user }}</td>
   </tr>
   <tr>
-    <td>Host</td>
+    <th>Host</th>
     <td>{{ run.host }}</td>
   </tr>
   <tr>
-    <td>State</td>
+    <th>State</th>
     <td>{{ run.state }}</td>
   </tr>
   <tr>
-    <td>Comment</td>
+    <th>Comment</th>
     <td>{{ run.rcomment }}</td>
   </tr>
   <tr>
-    <td>Tokamak</td>
+    <th>Tokamak</th>
     <td>{{ run.tokamak }}</td>
   </tr>
   <tr>
-    <td>Shot No.</td>
+    <th>Shot No.</th>
     <td>{{ run.shotno }}</td>
   </tr>
   <tr>
-    <td>Sim Name</td>
+    <th>Sim Name</th>
     <td>{{ run.simname }}</td>
   </tr>
   <tr>
-    <td>Start At</td>
+    <th>Start At</th>
     <td>{{ run.startat }}</td>
   </tr>
   <tr>
-    <td>Stop At</td>
+    <th>Stop At</th>
     <td>{{ run.stopat }}</td>
   </tr>
   <tr>
-    <td>Sim Run ID</td>
+    <th>Sim Run ID</th>
     <td>{{ run.sim_runid }}</td>
   </tr>
   <tr>
-    <td>Output Prefix</td>
+    <th>Output Prefix</th>
     <td>{{ run.outputprefix }}</td>
   </tr>
   <tr>
-    <td>Tag</td>
+    <th>Tag</th>
     <td>{{ run.tag }}</td>
   </tr>
   <tr>
-    <td>IPS version</td>
+    <th>IPS version</th>
     <td>{{ run.ips_version }}</td>
   </tr>
   <tr>
-    <td>Trace</td>
+    <th>Trace</th>
     {% if run.state == "Completed" %}
     {% if run.has_trace %}
     <td><a href="{{ url_for('trace.gettrace', runid=run.runid) }}">trace</a></td>
@@ -73,7 +73,7 @@
     {% endif %}
   </tr>
   <tr>
-    <td>Resource usage</td>
+    <th>Resource usage</th>
     {% if run.state == "Completed" %}
     {% if run.has_trace %}
     <td><a href="{{ url_for('resourceplot.resource_plot', runid=run.runid) }}">plot</a></td>

@@ -16,10 +16,6 @@
     </tr>
   </thead>
   <tbody>
-    {% for run in runs%}
-    <tr> {% for column in columns %}{% if column.param == 'runid' %}
-      <td><a href="{{ url_for('.run', runid=run.runid) }}">{{ run.runid }}</a></td> {% else %} <td>{{ run.get(column.param) }}</td> {% endif %}
-      {% endfor %} </tr> {% endfor %}
   </tbody>
 </table>
 </div>

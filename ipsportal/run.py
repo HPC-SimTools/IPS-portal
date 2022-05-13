@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template
-from ipsportal.db import get_runs, get_run, get_events
+from ipsportal.db import get_run, get_events
 
 bp = Blueprint('index', __name__)
 
@@ -15,7 +15,7 @@ INDEX_COLUMNS = ({'name': 'RunID', 'param': 'runid'},
 
 @bp.route("/")
 def index():
-    return render_template("index.html", columns=INDEX_COLUMNS, runs=get_runs())
+    return render_template("index.html", columns=INDEX_COLUMNS)
 
 
 @bp.route("/<int:runid>")
