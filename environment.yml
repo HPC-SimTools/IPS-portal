@@ -7,6 +7,5 @@ dependencies:
   - pymongo=4.1
   - waitress=2.1
   - plotly=5.1
-  - numpy=1.21
   - requests=2.27
   - pip

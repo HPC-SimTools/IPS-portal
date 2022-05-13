@@ -120,13 +120,12 @@ def test_post_event(client):
 
     response = client.get("/")
     assert response.status_code == 200
-    assert f"CI Test {portal_runid}" in response.text
 
     response = client.get(f"/{runid}")
     assert response.status_code == 200
     assert f"CI Test {portal_runid}" in response.text
-    assert f"Starting IPS Simulation {portal_runid}" in response.text
-    assert f"Simulation Ended {portal_runid}" in response.text
+    assert f"IPS Portal - Run - {runid}" in response.text
+    assert f"runid={runid}" in response.text
 
     response = client.get(f"/gettrace/{runid}")
     assert response.status_code == 302
