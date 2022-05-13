@@ -27,6 +27,7 @@ Deploy
  - Environment Variables
    - Add Variable
      - MONGODB_HOSTNAME: db
+     - JAEGER_HOSTNAME: jaeger
  - Secutiry & Host Config
    - Drop Capabilties
      - ALL
