@@ -34,9 +34,17 @@ docker run --rm -p 27017:27017 -v /tmp/db:/data/db mongo:5
 ### For profile tracing
 
 ```shell
-docker pull jaegertracing/all-in-one:1.31
-docker run --rm -p 9411:9411 -p 16686:16686 --env COLLECTOR_ZIPKIN_HOST_PORT=9411 --env QUERY_BASE_PATH=/jaeger jaegertracing/all-in-one:1.31
+docker pull jaegertracing/all-in-one:1.34
+docker run --rm -p 9411:9411 -p 16686:16686 --env COLLECTOR_ZIPKIN_HOST_PORT=9411 --env QUERY_BASE_PATH=/jaeger jaegertracing/all-in-one:1.34
 ```
+
+### To view current state of the mongo db
+
+```shell
+docker run --rm --network host -p 8081:8081 -e ME_CONFIG_MONGODB_SERVER=localhost mongo-express
+```
+
+then go to http://localhost:8081
 
 ## Run with docker in production
 
