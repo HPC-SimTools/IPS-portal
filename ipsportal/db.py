@@ -6,7 +6,10 @@ import os
 
 def get_db():
     if 'db' not in g:
-        client = MongoClient('mongodb://'+os.environ.get('MONGODB_HOSTNAME', 'localhost')+':27017')
+        client = MongoClient(host=os.environ.get('MONGO_HOST', 'localhost'),
+                             port=os.environ.get('MONGO_PORT', 27017),
+                             username=os.environ.get('MONGO_USERNAME'),
+                             password=os.environ.get('MONGO_PASSWORD'))
         client.portal.runs.create_index([('runid', DESCENDING)], unique=True)
         client.portal.runs.create_index([('portal_runid', ASCENDING)], unique=True)
         g.db = client.portal

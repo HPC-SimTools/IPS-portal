@@ -1,7 +1,11 @@
 Deploy
  - Name: db
- - Docker Image: mongo:5
+ - Docker Image: mongo:4
  - Namespace: ipsportal
+ - Environment Variables
+   - Add Variable
+     - MONGO_INITDB_ROOT_USERNAME: mongo
+     - MONGO_INITDB_ROOT_PASSWORD: password
  - Volume:
    - Add Volume: Add a new persistent volume (claim)
      - Name: mongodb
@@ -26,8 +30,10 @@ Deploy
  - Namespace: ipsportal
  - Environment Variables
    - Add Variable
-     - MONGODB_HOSTNAME: db
-     - JAEGER_HOSTNAME: jaeger
+     - MONGO_HOST: db
+     - MONGO_USERNAME: mongo
+     - MONGO_PASSWORD: password
+     - JAEGER_HOST: jaeger
  - Secutiry & Host Config
    - Drop Capabilties
      - ALL

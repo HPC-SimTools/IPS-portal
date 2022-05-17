@@ -6,7 +6,7 @@ from ipsportal.db import get_trace, get_run
 
 bp = Blueprint('trace', __name__)
 
-JAEGER_HOSTNAME = os.environ.get('JAEGER_HOSTNAME', 'localhost')
+JAEGER_HOSTNAME = os.environ.get('JAEGER_HOST', 'localhost')
 
 
 @bp.route("/gettrace/<int:runid>")
