@@ -1,3 +1,7 @@
+# Deploying on Spin
+
+## Manual deploy
+
 Deploy
  - Name: db
  - Docker Image: mongo:4
@@ -85,3 +89,31 @@ Add Ingress
    - /jaeger
      - Target: jaeger
      - Port: 16686
+
+## Deploy with Kubernetes manifest
+
+Log in to spin rancher, see https://docs.nersc.gov/services/spin/rancher2/cli/
+
+To see which cluster you are on:
+
+```shell
+rancher context current
+```
+
+To switch between production and development clusters:
+
+```shell
+rancher context switch
+```
+
+Create the `ipsportal` namespace:
+
+```shell
+rancher namespace create ipsportal
+```
+
+Deploy:
+
+```shell
+rancher kubectl apply -f ipsportal.yaml
+```
