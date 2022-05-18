@@ -43,3 +43,10 @@ jobs:
         context: .
         tags: ghcr.io/hpc-simtools/ips-portal/ipsportal:latest
         push: true
+    - name: Build and push mongodb-backup
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: Dockerfile.mongodb-backup
+        tags: ghcr.io/hpc-simtools/ips-portal/mongodb-backup:latest
+        push: true

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+DATETIME=`date "+%Y%m%dT%H%M%S"`
+
+cd "${MONGODB_DUMP_DIR}" && \
+mkdir "${DATETIME}" && \
+mongodump \
+  --archive --gzip --db $MONGODB_DATABASE \
+  --username "${MONGODB_USER}" --host "${MONGODB_HOST}" --password "${MONGODB_PASSWORD}" \
+  --verbose > "${DATETIME}/${MONGODB_DUMP_FILE_BASE}" 2> "${DATETIME}/${MONGODB_DUMP_FILE_BASE}.log"
+
+if [ $? -eq 0 ]; then
+  rm -f "${MONGODB_DUMP_FILE_BASE}"
+  ln -s "${DATETIME}/${MONGODB_DUMP_FILE_BASE}" "${MONGODB_DUMP_FILE_BASE}"
+  touch "${DATETIME}/done"
+
+  # backwards-compatible; remove after 2019-05-20
+  find  "${MONGODB_DUMP_FILE_BASE}"-* -mtime +${MONGODB_DUMP_RETAIN_DAYS} -delete
+
+  if [ "${MONGODB_DUMP_RETAIN_DAYS}" != "-1" ]; then
+    find ????????T?????? -mtime +${MONGODB_DUMP_RETAIN_DAYS} -delete
+  fi
+else
+  rm -f "${DATETIME}/${MONGODB_DUMP_FILE_BASE}"
+fi

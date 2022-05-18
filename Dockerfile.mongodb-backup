@@ -1,0 +1,4 @@
+FROM mongo:4
+COPY mongodb-backup /usr/local/bin/
+ENTRYPOINT []
+CMD ["mongodb-backup"]
