@@ -117,3 +117,15 @@ Deploy:
 ```shell
 rancher kubectl apply -f ipsportal.yaml
 ```
+
+To manually trigger a database backup run
+
+```shell
+rancher kubectl create job --from=cronjob/mongodb-dump manual-dump --namespace=ipsportal
+```
+
+then to see the status of the job run
+
+```shell
+rancher kubectl describe job.batch/manual-dump --namespace=ipsportal
+```

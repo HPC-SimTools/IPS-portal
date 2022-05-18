@@ -19,6 +19,11 @@ spec:
       containers:
       - name: db
         image: mongo:4
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: mongo
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: password-CHANGE-ME
         securityContext:
           capabilities:
             add:
@@ -95,10 +100,65 @@ spec:
           value: jaeger
         - name: MONGO_HOST
           value: db
+        - name: MONGO_USERNAME
+          value: mongo
+        - name: MONGO_PASSWORD
+          value: password-CHANGE-ME
         securityContext:
           capabilities:
             drop:
             - ALL
+---
+kind: CronJob
+apiVersion: batch/v1beta1
+metadata:
+  labels:
+    ipsportal
+  namespace: ipsportal
+  name: mongodb-dump
+  labels:
+    app: ipsportal
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: mongodb-dump
+            image: ghcr.io/hpc-simtools/ips-portal/mongodb-backup:latest
+            env:
+            - name: MONGODB_DUMP_DIR
+              value: /backup
+            - name: MONGODB_DATABASE
+              value: portal
+            - name: MONGODB_HOST
+              value: db:27017
+            - name: MONGODB_USER
+              value: mongo
+            - name: MONGODB_PASSWORD
+              value: password-CHANGE-ME
+            - name: MONGODB_DUMP_FILE_BASE
+              value: mongodb-dump.archive.gz
+            - name: MONGODB_DUMP_RETAIN_DAYS
+              value: "7"
+            securityContext:
+              capabilities:
+                drop:
+                - ALL
+              runAsNonRoot: true
+              runAsUser: 59432
+            volumeMounts:
+            - mountPath: /backup
+              name: backup
+          restartPolicy: Never
+          securityContext:
+            fsGroup: 59432
+          volumes:
+          - hostPath:
+              path: /global/u1/r/rwp/ipsportal_backup
+              type: Directory
+            name: backup
+  schedule: 12 3 * * *
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
