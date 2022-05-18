@@ -109,6 +109,45 @@ spec:
             drop:
             - ALL
 ---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    ipsportal
+  namespace: ipsportal
+  name: me
+  labels:
+    app: ipsportal
+spec:
+  selector:
+    matchLabels:
+      app: ipsportal
+  template:
+    metadata:
+      labels:
+        app: ipsportal
+    spec:
+      containers:
+      - name: me
+        image: mongo-express
+        env:
+        - name: ME_CONFIG_MONGODB_SERVER
+          value: db
+        - name: ME_CONFIG_SITE_BASEURL
+          value: /me
+        - name: ME_CONFIG_MONGODB_ADMINUSERNAME
+          value: mongo
+        - name: ME_CONFIG_MONGODB_ADMINPASSWORD
+          value: password-CHANGE-ME
+        - name: ME_CONFIG_BASICAUTH_USERNAME
+          value: mongo
+        - name: ME_CONFIG_BASICAUTH_PASSWORD
+          value: password-CHANGE-ME-2
+        securityContext:
+          capabilities:
+            drop:
+            - ALL
+---
 kind: CronJob
 apiVersion: batch/v1beta1
 metadata:
@@ -191,6 +230,10 @@ spec:
           serviceName: jaeger-ingress
           servicePort: 16686
         path: /jaeger
+      - backend:
+          serviceName: me-ingress
+          servicePort: 8081
+        path: /me
 ---
 apiVersion: v1
 kind: Service
@@ -216,6 +259,23 @@ metadata:
   name: jaeger
   annotations:
     field.cattle.io/targetWorkloadIds: '["deployment:ipsportal:jaeger"]'
+spec:
+  clusterIP: None
+  clusterIPs:
+    - None
+  ports:
+  - name: default
+    port: 42
+    protocol: TCP
+    targetPort: 42
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: ipsportal
+  name: me
+  annotations:
+    field.cattle.io/targetWorkloadIds: '["deployment:ipsportal:me"]'
 spec:
   clusterIP: None
   clusterIPs:
@@ -270,3 +330,17 @@ spec:
     port: 16686
     protocol: TCP
     targetPort: 16686
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: ipsportal
+  name: me-ingress
+  annotations:
+    field.cattle.io/targetWorkloadIds: '["deployment:ipsportal:me"]'
+spec:
+  ports:
+  - name: default
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
