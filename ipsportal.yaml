@@ -9,6 +9,9 @@ spec:
   selector:
     matchLabels:
       app: ipsportal-db
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
   template:
     metadata:
       labels:
