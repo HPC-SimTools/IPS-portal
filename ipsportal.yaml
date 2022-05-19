@@ -12,6 +12,7 @@ spec:
   strategy:
     rollingUpdate:
       maxSurge: 0
+    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -21,10 +22,10 @@ spec:
       - name: db
         image: mongo:4
         env:
-        - name: MONGO_INITDB_ROOT_USERNAME
-          value: mongo
-        - name: MONGO_INITDB_ROOT_PASSWORD
-          value: password-CHANGE-ME
+        - name: MONGO_INITDB_ROOT_USERNAME_FILE
+          value: /secrets/MONGO_USERNAME
+        - name: MONGO_INITDB_ROOT_PASSWORD_FILE
+          value: /secrets/MONGO_PASSWORD
         securityContext:
           capabilities:
             add:
@@ -38,10 +39,16 @@ spec:
         volumeMounts:
         - mountPath: /data/db
           name: mongo
+        - mountPath: /secrets
+          name: secrets
       volumes:
       - name: mongo
         persistentVolumeClaim:
           claimName: mongo
+      - name: secrets
+        secret:
+          secretName: mongo-secrets
+          defaultMode: 292
 ---
 kind: Deployment
 apiVersion: apps/v1
@@ -92,15 +99,14 @@ spec:
       - name: ipsportal
         image: ghcr.io/hpc-simtools/ips-portal/ipsportal:latest
         imagePullPolicy: Always
+        envFrom:
+        - secretRef:
+            name: mongo-secrets
         env:
         - name: JAEGER_HOST
           value: jaeger
         - name: MONGO_HOST
           value: db
-        - name: MONGO_USERNAME
-          value: mongo
-        - name: MONGO_PASSWORD
-          value: password-CHANGE-ME
         securityContext:
           capabilities:
             drop:
@@ -130,18 +136,25 @@ spec:
           value: db
         - name: ME_CONFIG_SITE_BASEURL
           value: /me
-        - name: ME_CONFIG_MONGODB_ADMINUSERNAME
-          value: mongo
-        - name: ME_CONFIG_MONGODB_ADMINPASSWORD
-          value: password-CHANGE-ME
-        - name: ME_CONFIG_BASICAUTH_USERNAME
-          value: mongo
-        - name: ME_CONFIG_BASICAUTH_PASSWORD
-          value: password-CHANGE-ME-2
+        - name: ME_CONFIG_MONGODB_ADMINUSERNAME_FILE
+          value: /secrets/MONGO_USERNAME
+        - name: ME_CONFIG_MONGODB_ADMINPASSWORD_FILE
+          value: /secrets/MONGO_PASSWORD
+        - name: ME_CONFIG_BASICAUTH_USERNAME_FILE
+          value: /secrets/ME_USERNAME
+        - name: ME_CONFIG_BASICAUTH_PASSWORD_FILE
+          value: /secrets/ME_PASSWORD
         securityContext:
           capabilities:
             drop:
             - ALL
+        volumeMounts:
+        - mountPath: /secrets
+          name: secrets
+      volumes:
+      - name: secrets
+        secret:
+          secretName: mongo-secrets
 ---
 kind: CronJob
 apiVersion: batch/v1beta1
@@ -158,6 +171,9 @@ spec:
           containers:
           - name: mongodb-dump
             image: ghcr.io/hpc-simtools/ips-portal/mongodb-backup:latest
+            envFrom:
+            - secretRef:
+                name: mongo-secrets
             env:
             - name: MONGODB_DUMP_DIR
               value: /backup
@@ -165,10 +181,6 @@ spec:
               value: portal
             - name: MONGODB_HOST
               value: db:27017
-            - name: MONGODB_USER
-              value: mongo
-            - name: MONGODB_PASSWORD
-              value: password-CHANGE-ME
             - name: MONGODB_DUMP_FILE_BASE
               value: mongodb-dump.archive.gz
             - name: MONGODB_DUMP_RETAIN_DAYS

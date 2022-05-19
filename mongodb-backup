@@ -5,8 +5,8 @@ DATETIME=`date "+%Y%m%dT%H%M%S"`
 cd "${MONGODB_DUMP_DIR}" && \
 mkdir "${DATETIME}" && \
 mongodump \
-  --archive --gzip --db $MONGODB_DATABASE \
-  --username "${MONGODB_USER}" --host "${MONGODB_HOST}" --password "${MONGODB_PASSWORD}" \
+  --archive --gzip --db $MONGODB_DATABASE --authenticationDatabase admin \
+  --username "${MONGO_USERNAME}" --host "${MONGODB_HOST}" --password "${MONGO_PASSWORD}" \
   --verbose > "${DATETIME}/${MONGODB_DUMP_FILE_BASE}" 2> "${DATETIME}/${MONGODB_DUMP_FILE_BASE}.log"
 
 if [ $? -eq 0 ]; then

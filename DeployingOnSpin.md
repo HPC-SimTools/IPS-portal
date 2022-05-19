@@ -112,6 +112,12 @@ Create the `ipsportal` namespace:
 rancher namespace create ipsportal
 ```
 
+Set up secrets, update `secret.yaml` before running, base64 encode, e.g. `echo -n "password" | base64`
+
+```shell
+rancher kubectl apply -f secret.yaml
+```
+
 Deploy:
 
 ```shell
