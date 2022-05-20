@@ -175,6 +175,13 @@ def test_post_events(client):
     assert response.json[0] == trace1
     assert response.json[1] == trace2
 
+    # posting another event should fail since run has ended
+    response = client.post("/api/event", json=event)
+
+    assert response.status_code == 400
+    assert "message" in response.json
+    assert response.json["message"] == "Invalid portal_runid"
+
 
 def test_invalid_portal_id(client):
     # this isn't a IPS_START event so this portal_runid is invalid

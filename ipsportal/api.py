@@ -105,7 +105,7 @@ def event():
         else:
             update["$set"] = {"has_trace": True}
 
-    if update_run({'portal_runid': e.get('portal_runid')}, update).modified_count == 0:
+    if update_run({'portal_runid': e.get('portal_runid'), "state": "Running"}, update).modified_count == 0:
         return jsonify(message='Invalid portal_runid'), 400
 
     return jsonify(message=msg)
