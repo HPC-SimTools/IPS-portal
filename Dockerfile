@@ -6,7 +6,7 @@ RUN rm -r /code
 
 RUN mkdir -p /usr/var/ipsportal-instance && chmod 777 /usr/var/ipsportal-instance
 
-CMD ["waitress-serve", "--call", "ipsportal:create_app"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8080", "ipsportal:create_app()"]
 
 ADD docker-entrypoint.sh /bin/docker-entrypoint.sh
 RUN chmod +x /bin/docker-entrypoint.sh
