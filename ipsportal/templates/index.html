@@ -8,8 +8,7 @@
 
 {% block content %}
 
-<div class="table-responsive">
-<table id="runs-table" class="table table-striped table-bordered" style="width:100%">
+<table id="runs-table" class="table table-striped table-bordered">
   <thead>
     <tr> {% for column in columns %}
       <th>{{ column.name }}</th> {% endfor %}
@@ -18,6 +17,5 @@
   <tbody>
   </tbody>
 </table>
-</div>
 
 {% endblock %}
