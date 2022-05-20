@@ -1,5 +1,7 @@
 from uuid import uuid1
 import hashlib
+import os
+import requests
 
 
 def test_post_invalid_run_number(client):
@@ -12,6 +14,8 @@ def test_post_invalid_run_number(client):
 
 def test_post_event(client):
     portal_runid = str(uuid1())
+    traceID = hashlib.md5(portal_runid.encode()).hexdigest()
+
     response = client.post("/", json={
         'code': "Framework",
         'eventtype': "IPS_START",
@@ -49,7 +53,7 @@ def test_post_event(client):
                 "procs_requested": "1",
                 "cores_allocated": "1"
             },
-            "traceId": "f685928677c84dced386734b1f3b1dc0"
+            "traceId": traceID
         },
         "state": "Running",
         "comment": "task_id = 60  elapsed time = 2.15 S",
@@ -78,7 +82,7 @@ def test_post_event(client):
                   "name": "step(0)",
                   "id": "4f44682177c5b766",
                   "parentId": "f3994d99c2892c58",
-                  "traceId": "f685928677c84dced386734b1f3b1dc0"
+                  "traceId": traceID
                 },
           "sim_name": "CI Test",
           "phystimestamp": 0,
@@ -111,7 +115,7 @@ def test_post_event(client):
             "tags": {
                 "total_cores": "8"
             },
-            "traceId": "f685928677c84dced386734b1f3b1dc0"
+            "traceId": traceID
         }
     })
 
@@ -127,12 +131,17 @@ def test_post_event(client):
     assert f"IPS Portal - Run - {runid}" in response.text
     assert f"runid={runid}" in response.text
 
-    response = client.get(f"/gettrace/{runid}")
-    assert response.status_code == 302
-    traceID = hashlib.md5(portal_runid.encode()).hexdigest()
-    assert f"/jaeger/trace/{traceID}" in response.text
-
     response = client.get(f"/resource_plot/{runid}")
     assert response.status_code == 200
     assert f"<a href='/{runid}'>Run - {runid}</a> Sim Name: CI Test Comment: " \
         f"CI Test {portal_runid}<br>Allocation total cores = 8" in response.text
+
+    response = client.get(f"/gettrace/{runid}")
+    assert response.status_code == 302
+    assert f"/jaeger/trace/{traceID}" in response.text
+
+    # check trace was sent to jaeger
+    r = requests.get(f"http://{os.environ.get('JAEGER_HOST', 'localhost')}:16686/jaeger/api/traces/{traceID}")
+    assert "data" in r.json()
+    assert "traceID" in r.json()["data"][0]
+    assert r.json()["data"][0]["traceID"] == traceID
