@@ -89,18 +89,23 @@ def event():
             return jsonify(message="Duplicate portal_runid Key"), 400
         return jsonify(message="New run created", runid=runid)
 
-    if trace := e.pop('trace', False):
-        if update_run({'portal_runid': e.get('portal_runid')},
-                      {"$push": {"traces": trace}, "$set": {"has_trace": True}}).modified_count == 0:
-            return jsonify(message='Invalid portal_runid'), 400
+    msg = "Event added to run"
 
-    if update_run({'portal_runid': e.get('portal_runid')}, {"$push": {"events": e}}).modified_count == 0:
-        return jsonify(message='Invalid portal_runid'), 400
+    update = {"$push": {"events": e}}
 
     if e.get('eventtype') == "IPS_END":
         run_dict = {key: e[key] for key in run_keys if key in e}
-        if update_run({'portal_runid': run_dict.get('portal_runid')}, {'$set': run_dict}).modified_count == 0:
-            return jsonify(message="Error updating run")
-        return jsonify(message="Event added to run and run ended")
+        update["$set"] = run_dict
+        msg = "Event added to run and run ended"
 
-    return jsonify(message="Event added to run")
+    if trace := e.pop('trace', False):
+        update["$push"]["traces"] = trace
+        if "$set" in update:
+            update["$set"]["has_trace"] = True
+        else:
+            update["$set"] = {"has_trace": True}
+
+    if update_run({'portal_runid': e.get('portal_runid')}, update).modified_count == 0:
+        return jsonify(message='Invalid portal_runid'), 400
+
+    return jsonify(message=msg)

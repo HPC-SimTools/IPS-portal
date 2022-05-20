@@ -43,7 +43,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: .
-        tags: ghcr.io/hpc-simtools/ips-portal/ipsportal:latest
+        tags: ghcr.io/hpc-simtools/ips-portal/ipsportal:dev
         push: true
 
     - name: Build and push IPS portal version
@@ -51,7 +51,9 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: .
-        tags: ghcr.io/hpc-simtools/ips-portal/ipsportal:${{ github.ref_name }}
+        tags: |
+          ghcr.io/hpc-simtools/ips-portal/ipsportal:latest
+          ghcr.io/hpc-simtools/ips-portal/ipsportal:${{ github.ref_name }}
         push: true
 
     - name: Build and push mongodb-backup
