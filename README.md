@@ -2,21 +2,25 @@
 
 ## Run in development mode
 
-Setup environment with conda and install testing requirements
+Setup environment with python venv and install IPS-portal:
 
 ```shell
-conda env create -f environment.yml
-conda activate ipsportal
-conda env update -f environment_dev.yml
+python -m venv env
+source env/bin/activate
+python -m pip install -e .[dev]
 ```
 
-Install and run the appilcation
+If that fails with `ERROR: File "setup.py" not found.` try upgrading pip first:
 
 ```shell
-python -m pip install -e .
+python -m pip install --upgrade pip
+```
 
+To run the appilcation in debug mode
+
+```shell
 export FLASK_APP=ipsportal
-export MONGODB_HOSTNAME=localhost
+export FLASK_DEBUG=True
 
 # start IPS portal
 flask run
@@ -46,31 +50,10 @@ docker run --rm --network host -p 8081:8081 -e ME_CONFIG_MONGODB_SERVER=localhos
 
 then go to http://localhost:8081
 
-## Run with docker in production
-
-## build and run ipsportal
+## Run with docker
 
 ```shell
-docker build -t rosswhitfield/ipsportal:latest .
-docker run -p 8080:8080 --rm --env MONGODB_HOSTNAME=localhost --network host -t rosswhitfield/ipsportal:latest
+docker-compose up --build
 ```
 
-## To push to dockerhub
-
-```shell
-docker push rosswhitfield/ipsportal:latest
-```
-
-## Or use docker-compose
-
-```shell
-docker-compose up
-```
-
-Go to http://localhost:8080
-
-## A docker container to create db backups
-
-```
-docker build -f Dockerfile.db-backup -t rosswhitfield/ipsportal-backup:latest .
-```
+Go to http://localhost
