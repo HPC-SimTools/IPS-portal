@@ -63,6 +63,11 @@ jobs:
     - name: Start IPS-portal with docker-compose
       run: docker-compose up --build -d
 
+    - name: Run test
+      run: |
+        cd ips_test
+        ./run_test.sh
+
   docker:
     runs-on: ubuntu-latest
 
