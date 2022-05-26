@@ -85,6 +85,20 @@
     {% endif %}
   </tr>
   </tbody>
+  <tr>
+    <th>Monitor files</th>
+    <td>
+    <table>
+      {% for monitor_file in run.monitor_files %}
+      <tr>
+	<td>
+	  <a href="{{ url_for('analysis.to_jupyter', url=monitor_file) }}">Analyze</a> {{ monitor_file }}
+	</td>
+      </tr>
+      {% endfor %}
+    </table>
+    </td>
+  </tr>
 </table>
 <h4>Events</h4>
 <div class="table-responsive">

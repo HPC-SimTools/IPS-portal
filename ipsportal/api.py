@@ -83,6 +83,7 @@ def event():
         run_dict['events'] = [e]
         run_dict['traces'] = []
         run_dict['has_trace'] = False
+        run_dict['monitor_files'] = []
         try:
             add_run(run_dict)
         except pymongo.errors.DuplicateKeyError:
@@ -104,6 +105,9 @@ def event():
             update["$set"]["has_trace"] = True
         else:
             update["$set"] = {"has_trace": True}
+
+    if e.get('eventtype') == "MONITOR_FILE":
+        update["$push"]["monitor_files"] = e['comment']
 
     if update_run({'portal_runid': e.get('portal_runid'), "state": "Running"}, update).modified_count == 0:
         return jsonify(message='Invalid portal_runid'), 400
