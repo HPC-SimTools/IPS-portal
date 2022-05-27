@@ -1,3 +1,4 @@
 graft ipsportal/static
 graft ipsportal/templates
+graft ipsportal/notebooks
 global-exclude *.pyc
