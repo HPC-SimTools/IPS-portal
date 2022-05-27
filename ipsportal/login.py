@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, session, redirect, url_for, current_app
+from functools import wraps
+from flask import Blueprint, render_template, request, session, redirect, url_for, current_app, flash
 import requests
 
 bp = Blueprint('login', __name__)
@@ -59,10 +60,19 @@ def newt_logout():
     return False
 
 
-@bp.route("/login")
+@bp.route("/login", methods=["GET", "POST"])
 def login():
-    if newt_check_login():
-        return redirect(url_for('index.index'))
+    if request.method == "POST":
+        if newt_login(request.form['username'], request.form['password']):
+            newt_get_user_info()
+            if next_url := request.form.get("next"):
+                return redirect(next_url)
+            return redirect(url_for('index.index'))
+        else:
+            flash("Incorrect username or password")
+    else:
+        if newt_check_login():
+            return redirect(url_for('index.index'))
 
     return render_template("login.html")
 
@@ -79,13 +89,13 @@ def session_info():
     return session
 
 
-@bp.route("/login", methods=['POST'])
-def login_user():
-    if 'username' not in request.form or 'password' not in request.form:
-        return "Missing username or password", 400
+def login_required(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        if session.get('auth', False):
+            return f(*args, **kwargs)
 
-    if newt_login(request.form['username'], request.form['password']):
-        newt_get_user_info()
-        return redirect(url_for('index.index'))
+        flash("Login required")
+        return redirect(url_for('login.login', next=request.path))
 
-    return login()
+    return wrap

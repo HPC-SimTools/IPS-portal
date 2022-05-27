@@ -1,11 +1,13 @@
 import os
 from flask import Blueprint, session, redirect
 import requests
+from ipsportal.login import login_required
 
 bp = Blueprint('analysis', __name__)
 
 
 @bp.route("/to_jupyter/<path:url>")
+@login_required
 def to_jupyter(url):
     filename = os.path.join(os.path.dirname(__file__), 'notebooks/monitor.ipynb')
     ipynb = open(filename).read()

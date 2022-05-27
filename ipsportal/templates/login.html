@@ -4,23 +4,21 @@
 <link href="/static/signin.css" rel="stylesheet">
 {% endblock %}
 
-{% block header %}
-<h4 class="text-center">{% block title %}Login{% endblock %}</h4>
-{% endblock %}
-
 {% block content %}
 
+<h4 class="text-center">{% block title %}Login{% endblock %}</h4>
 <div class="form-signin">
   <form action="/login" method="POST">
     <div class="form-floating">
-      <input type="text" class="form-control" name="username" placeholder="username">
+      <input type="text" class="form-control" name="username" placeholder="username" required>
       <label for="username" class="form-label">NERSC Username</label>
     </div>
     <div class="form-floating">
-      <input type="password" class="form-control" name="password", placeholder="password">
+      <input type="password" class="form-control" name="password", placeholder="password" required>
       <label for="password" class="form-label">Password + MFA</label>
     </div>
     <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+    <input type="hidden" name="next" value="{{ request.args.get('next', '') }}"/>
   </form>
 </div>
 
