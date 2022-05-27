@@ -1,4 +1,5 @@
 #!/bin/bash
+cd ips_test
 export PYTHONPATH=$PWD
 ips.py --config=sim.conf --platform=platform.conf
 
