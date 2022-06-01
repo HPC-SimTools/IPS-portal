@@ -3,19 +3,9 @@ from ipsportal.db import get_run
 
 bp = Blueprint('index', __name__)
 
-INDEX_COLUMNS = ({'name': 'RunID', 'param': 'runid'},
-                 {'name': 'Status', 'param': 'state'},
-                 {'name': 'Comment', 'param': 'rcomment'},
-                 {'name': 'Sim Name', 'param': 'simname'},
-                 {'name': 'Host', 'param': 'host'},
-                 {'name': 'User', 'param': 'user'},
-                 {'name': 'Start Time', 'param': 'startat'},
-                 {'name': 'Stop Time', 'param': 'stopat'})
-
-
 @bp.route("/")
 def index():
-    return render_template("index.html", columns=INDEX_COLUMNS)
+    return render_template("index.html")
 
 
 @bp.route("/<int:runid>")
