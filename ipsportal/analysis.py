@@ -16,4 +16,4 @@ def to_jupyter():
     requests.put("https://newt.nersc.gov/newt/file/cori/"+new_notebook,
                  data=ipynb.replace("$URL", request.args.get('url')),
                  cookies={"newt_sessionid": session['newt_sessionid']})
-    return redirect(f"https://jupyter.nersc.gov/user/{username}/cori-shared-node-cpu/lab/tree/{new_notebook}")
+    return redirect(f"https://jupyter.nersc.gov/user-redirect/lab/tree/{new_notebook}?url={request.args.get('url')}")
