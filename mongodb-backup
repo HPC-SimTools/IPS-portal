@@ -14,9 +14,6 @@ if [ $? -eq 0 ]; then
   ln -s "${DATETIME}/${MONGODB_DUMP_FILE_BASE}" "${MONGODB_DUMP_FILE_BASE}"
   touch "${DATETIME}/done"
 
-  # backwards-compatible; remove after 2019-05-20
-  find  "${MONGODB_DUMP_FILE_BASE}"-* -mtime +${MONGODB_DUMP_RETAIN_DAYS} -delete
-
   if [ "${MONGODB_DUMP_RETAIN_DAYS}" != "-1" ]; then
     find ????????T?????? -mtime +${MONGODB_DUMP_RETAIN_DAYS} -delete
   fi
