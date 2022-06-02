@@ -4,7 +4,7 @@ ADD . /code
 RUN cd /code && python -m pip install .
 RUN rm -r /code
 
-RUN mkdir -p /usr/var/ipsportal-instance && chmod 777 /usr/var/ipsportal-instance
+RUN mkdir -p /usr/local/var/ipsportal-instance && chmod 777 /usr/local/var/ipsportal-instance
 
 CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8080", "ipsportal:create_app()"]
 
