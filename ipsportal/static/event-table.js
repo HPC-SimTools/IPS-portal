@@ -23,14 +23,22 @@ $(document).ready( function () {
 	    {data: 'comment',
 	     defaultContent: ''}
 	],
-	buttons: [
-            {
-		text: 'Reload',
-		action: function ( e, dt, node, config ) {
-                    dt.ajax.reload();
+	buttons: {
+	    buttons: [
+		{
+		    text: 'Reload',
+		    className: 'btn btn-primary',
+		    action: function ( e, dt, node, config ) {
+			dt.ajax.reload();
+		    }
 		}
-            }
-	],
+	    ],
+	    dom: {
+		button: {
+		    className: 'btn'
+		}
+	    }
+	},
 	processing: true,
 	dom:
 	"<'row'<'col-sm-12 col-md-6'B><'col-sm-12 col-md-6'f>>" +
