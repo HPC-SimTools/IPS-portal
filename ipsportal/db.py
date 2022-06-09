@@ -60,6 +60,19 @@ def get_trace(filter):
     return run['traces']
 
 
+def get_datafiles(filter):
+    datafiles = db.runs.aggregate([{"$match": filter},
+                                   {"$unwind": "$events"},
+                                   {"$match": {"events.eventtype": "MONITOR_DATAFILE"}},
+                                   {"$group": {"_id": "$_id",
+                                               "datafiles": {"$addToSet": "$events.comment"}}}])
+
+    try:
+        return next(datafiles)['datafiles']
+    except StopIteration:
+        return []
+
+
 def add_run(run):
     return db.runs.insert_one(run)
 

@@ -89,6 +89,24 @@ def test_post_events(client):
     assert response.json['runid'] == runid
     assert response.json['has_trace']
 
+    # Post a MONITOR_DATAFILE event
+    monitor_event = {
+        "code": "Framework",
+        "eventtype": "MONITOR_DATAFILE",
+        "ok": "True",
+        "comment": "/path/to/file",
+        "walltime": "25.70",
+        "sim_name": "sim",
+        "phystimestamp": 0,
+        "portal_runid": portal_runid,
+        "seqnum": 2
+    }
+    response = client.post("/api/event", json=monitor_event)
+
+    assert response.status_code == 200
+    assert "message" in response.json
+    assert response.json["message"] == "Event added to run"
+
     # Post a IPS_END event
     end_event = {
         'code': "Framework",
@@ -100,7 +118,7 @@ def test_post_events(client):
         "stopat": "2022-05-03|15:41:34EDT",
         'phystimestamp': 1,
         'portal_runid': portal_runid,
-        'seqnum': 2,
+        'seqnum': 3,
         "trace": {
             "timestamp": 1651606867984607,
             "duration": 26698980,
@@ -134,46 +152,59 @@ def test_post_events(client):
     # check events with runid
     response = client.get(f"/api/run/{runid}/events")
     assert response.status_code == 200
-    assert len(response.json) == 3
+    assert len(response.json) == 4
+
     event0 = response.json[0]
     assert event0.pop('created')
     assert event0 == start_event
+
     event1 = response.json[1]
     assert event1.pop('created')
     trace1 = event.pop('trace')
     assert event1 == event
+
     event2 = response.json[2]
     assert event2.pop('created')
-    trace2 = end_event.pop('trace')
-    assert event2 == end_event
+    assert event2 == monitor_event
+
+    event3 = response.json[3]
+    assert event3.pop('created')
+    trace3 = end_event.pop('trace')
+    assert event3 == end_event
 
     # check events with portal_runid
     response = client.get(f"/api/run/{portal_runid}/events")
     assert response.status_code == 200
-    assert len(response.json) == 3
+    assert len(response.json) == 4
     event0 = response.json[0]
     assert event0.pop('created')
     assert event0 == start_event
+
     event1 = response.json[1]
     assert event1.pop('created')
     assert event1 == event
+
     event2 = response.json[2]
     assert event2.pop('created')
-    assert event2 == end_event
+    assert event2 == monitor_event
+
+    event3 = response.json[3]
+    assert event3.pop('created')
+    assert event3 == end_event
 
     # check trace with runid
     response = client.get(f"/api/run/{runid}/trace")
     assert response.status_code == 200
     assert len(response.json) == 2
     assert response.json[0] == trace1
-    assert response.json[1] == trace2
+    assert response.json[1] == trace3
 
     # check trace with portal_runid
     response = client.get(f"/api/run/{portal_runid}/trace")
     assert response.status_code == 200
     assert len(response.json) == 2
     assert response.json[0] == trace1
-    assert response.json[1] == trace2
+    assert response.json[1] == trace3
 
     # posting another event should fail since run has ended
     response = client.post("/api/event", json=event)
@@ -279,6 +310,10 @@ def test_runid_not_found(client):
     assert response.status_code == 404
     assert response.json['message'] == "runid 10000000 not found"
 
+    response = client.get("/api/run/10000000/datafiles")
+    assert response.status_code == 200
+    assert response.json == []
+
 
 def test_portal_runid_not_found(client):
     portal_runid = str(uuid1())
@@ -293,3 +328,7 @@ def test_portal_runid_not_found(client):
     response = client.get(f"/api/run/{portal_runid}/trace")
     assert response.status_code == 404
     assert response.json['message'] == f"portal_runid {portal_runid} not found"
+
+    response = client.get(f"/api/run/{portal_runid}/datafiles")
+    assert response.status_code == 200
+    assert response.json == []

@@ -84,6 +84,24 @@
     <td>wait for run to finish</td>
     {% endif %}
   </tr>
+  <tr>
+    <th>Data files</th>
+    <td>
+      <table>
+        {% for datafile in datafiles %}
+        <tr>
+         <td>
+            {% if datafile.startswith("https://") %}
+            <a href={{ datafile }}>{{ datafile }}</a>
+            {% else %}
+            {{ datafile }}
+            {% endif %}
+            </td>
+            </tr>
+        {% endfor %}
+      </table>
+    </td>
+  </tr>
   </tbody>
 </table>
 <h4>Events</h4>

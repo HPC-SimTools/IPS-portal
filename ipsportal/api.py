@@ -1,7 +1,8 @@
 import time
 from flask import Blueprint, jsonify, request
 import pymongo
-from ipsportal.db import get_runs, runs_count, get_events, get_run, get_trace, add_run, update_run
+from ipsportal.db import (get_runs, runs_count, get_events, get_run,
+                          get_trace, add_run, update_run, get_datafiles)
 
 bp = Blueprint('api', __name__)
 
@@ -60,6 +61,16 @@ def trace(portal_runid):
         return jsonify(message=f"portal_runid {portal_runid} not found"), 404
 
     return jsonify(trace)
+
+
+@bp.route("/api/run/<int:runid>/datafiles")
+def datafiles_runid(runid):
+    return jsonify(get_datafiles({'runid': runid}))
+
+
+@bp.route("/api/run/<string:portal_runid>/datafiles")
+def datafiles(portal_runid):
+    return jsonify(get_datafiles({'portal_runid': portal_runid}))
 
 
 @bp.route("/", methods=['POST'])

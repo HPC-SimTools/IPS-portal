@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template
-from ipsportal.db import get_run
+from ipsportal.db import get_run, get_datafiles
 
 bp = Blueprint('index', __name__)
 
@@ -23,4 +23,5 @@ def run(runid: int):
     run = get_run({'runid': runid})
     if run is None:
         return render_template("notfound.html", run=runid), 404
-    return render_template("events.html", run=run)
+    datafiles = get_datafiles({'runid': runid})
+    return render_template("events.html", run=run, datafiles=datafiles)
