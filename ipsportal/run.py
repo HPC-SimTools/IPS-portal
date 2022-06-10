@@ -10,7 +10,8 @@ INDEX_COLUMNS = ({'name': 'RunID', 'param': 'runid'},
                  {'name': 'Host', 'param': 'host'},
                  {'name': 'User', 'param': 'user'},
                  {'name': 'Start Time', 'param': 'startat'},
-                 {'name': 'Stop Time', 'param': 'stopat'})
+                 {'name': 'Stop Time', 'param': 'stopat'},
+                 {'name': 'Walltime', 'param': 'walltime'})
 
 
 @bp.route("/")

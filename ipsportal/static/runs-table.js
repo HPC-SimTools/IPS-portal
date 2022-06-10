@@ -26,6 +26,8 @@ $(document).ready( function () {
 	    {data: 'startat',
 	     defaultContent: ''},
 	    {data: 'stopat',
+	     defaultContent: ''},
+	    {data: 'walltime',
 	     defaultContent: ''}
 	],
 	buttons: {
@@ -49,5 +51,15 @@ $(document).ready( function () {
 		"<'row'<'col-sm-12 col-md-6'B><'col-sm-12 col-md-6'f>>" +
 		"<'row'<'col-sm-12'tr>>" +
 		"<'row'<'col-sm-12 col-md-5'l><'col-sm-12 col-md-3'i><'col-sm-12 col-md-4'p>>",
-    } );
+	createdRow: function(row, data, dataIndex){
+            if( data['state'] ==  'Completed'){
+		if (data['ok']) {
+                    $(row).addClass('table-success');
+		} else {
+		    $(row).addClass('table-danger');
+		}
+	    }
+        }
+    }
+			      );
 } );

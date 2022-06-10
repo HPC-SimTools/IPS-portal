@@ -80,7 +80,7 @@ def event():
 
     required = {'code', 'eventtype', 'comment', 'walltime', 'phystimestamp', 'portal_runid', 'seqnum'}
     run_keys = {'user', 'host', 'state', 'rcomment', 'tokamak', 'shotno', 'simname', 'startat',
-                'stopat', 'sim_runid', 'outputprefix', 'tag', 'ips_version', 'portal_runid'}
+                'stopat', 'sim_runid', 'outputprefix', 'tag', 'ips_version', 'portal_runid', 'ok'}
 
     if not e.keys() >= required:
         return jsonify(message=f'Missing required data: {sorted(k for k in required if k not in e.keys())}'), 400
@@ -94,6 +94,7 @@ def event():
         run_dict['events'] = [e]
         run_dict['traces'] = []
         run_dict['has_trace'] = False
+        run_dict['walltime'] = None
         try:
             add_run(run_dict)
         except pymongo.errors.DuplicateKeyError:
@@ -106,6 +107,10 @@ def event():
 
     if e.get('eventtype') == "IPS_END":
         run_dict = {key: e[key] for key in run_keys if key in e}
+        try:
+            run_dict['walltime'] = e['walltime']
+        except KeyError:
+            pass
         update["$set"] = run_dict
         msg = "Event added to run and run ended"
 
