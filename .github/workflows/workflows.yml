@@ -18,7 +18,7 @@ jobs:
     - name: Start MongoDB and Jaeger
       run: |
         docker run --rm -p 27017:27017 --name mongo -d mongo:4
-        docker run --rm -p 9411:9411 -p 16686:16686 --env QUERY_BASE_PATH=/jaeger --env COLLECTOR_ZIPKIN_HOST_PORT=9411 --name jaeger -d jaegertracing/all-in-one:1.31
+        docker run --rm -p 9411:9411 -p 16686:16686 --env QUERY_BASE_PATH=/jaeger --env COLLECTOR_ZIPKIN_HOST_PORT=9411 --name jaeger -d jaegertracing/all-in-one:1.35
 
     - name: Install ipsportal and testing requirements
       run: python -m pip install -e .[dev]

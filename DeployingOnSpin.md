@@ -67,7 +67,7 @@ Deploy
 
 Jaeger
  - Name: jaeger
- - Docker Image: jaegertracing/all-in-one:1.31
+ - Docker Image: jaegertracing/all-in-one:1.35
  - Namespace: ipsportal
  - Environment Variables
    - Add Variable
@@ -112,11 +112,7 @@ Create the `ipsportal` namespace:
 rancher namespace create ipsportal
 ```
 
-Set up secrets, update `secret.yaml` before running, base64 encode, e.g. `echo -n "password" | base64`
-
-```shell
-rancher kubectl apply -f secret.yaml
-```
+Set up secrets, update `ipsportal.yaml` before running, base64 encode, e.g. `echo -n "password" | base64`
 
 Deploy:
 
