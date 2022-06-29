@@ -1,3 +1,4 @@
+from typing import Tuple, Dict, Any
 import plotly.graph_objects as go
 from flask import Blueprint, url_for
 from ipsportal.db import get_trace, get_run
@@ -6,8 +7,10 @@ bp = Blueprint('resourceplot', __name__)
 
 
 @bp.route("/resource_plot/<int:runid>")
-def resource_plot(runid):
+def resource_plot(runid: int) -> Tuple[str, int]:
     traces = get_trace({"runid": runid})
+    if traces is None:
+        return "Unable to plot because missing trace information", 500
 
     # last trace should get the IPS_END event
     try:
@@ -27,7 +30,7 @@ def resource_plot(runid):
                 tasks.append(trace)
                 task_set.add(trace['localEndpoint']['serviceName'])
 
-        task_plots = {'x': []}
+        task_plots: Dict[str, Any] = {'x': []}
         for task in task_set:
             task_plots[task] = []
 
@@ -80,4 +83,4 @@ def resource_plot(runid):
                        f"Sim Name: {run['simname']} Comment: {run['rcomment']}<br>"
                        f"Allocation total cores = {total_cores}",
                        legend_title_text="Tasks")
-    return plot.to_html()
+    return plot.to_html(), 200

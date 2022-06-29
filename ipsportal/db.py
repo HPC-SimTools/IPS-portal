@@ -1,10 +1,11 @@
-from pymongo import MongoClient, ASCENDING, DESCENDING
+from typing import List, Dict, Any, Optional
+from pymongo import MongoClient, ASCENDING, DESCENDING, database, results
 from werkzeug.local import LocalProxy
-from flask import g
+from flask import g, Flask
 import os
 
 
-def get_db():
+def get_db() -> database.Database:
     if 'db' not in g:
         client = MongoClient(host=os.environ.get('MONGO_HOST', 'localhost'),
                              port=os.environ.get('MONGO_PORT', 27017),
@@ -17,52 +18,53 @@ def get_db():
     return g.db
 
 
-def close_db(e=None):
+def close_db(e: Optional[BaseException] = None) -> None:
     db = g.pop('db', None)
 
     if db is not None:
         db.client.close()
 
 
-def init_app(app):
+def init_app(app: Flask) -> None:
     app.teardown_appcontext(close_db)
 
 
 # Use LocalProxy to read the global db instance with just `db`
-db = LocalProxy(get_db)
+db: LocalProxy = LocalProxy(get_db)
 
 
-def get_runs():
-    return list(db.runs.find(projection={'_id': False, 'events': False, 'traces': False}))
+def get_runs() -> List[Dict[str, Any]]:
+    return list(db.runs.find(projection={'_id': False, 'events': False, 'traces': False}))  # type: ignore[attr-defined]
 
 
-def runs_count():
-    return db.runs.count_documents({})
+def runs_count() -> int:
+    return db.runs.count_documents({})  # type: ignore[attr-defined, no-any-return]
 
 
-def get_events(filter):
-    runs = db.runs.find_one(filter, projection={'_id': False, 'events': True})
+def get_events(filter: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
+    runs = db.runs.find_one(filter, projection={'_id': False, 'events': True})  # type: ignore[attr-defined]
     if runs is None:
         return None
-    return runs['events']
+    return runs['events']  # type: ignore[no-any-return]
 
 
-def get_run(filter):
-    return db.runs.find_one(filter, projection={'_id': False, 'events': False, 'traces': False})
+def get_run(filter: Dict[str, Any]) -> Dict[str, Any]:
+    return db.runs.find_one(filter,  # type: ignore[attr-defined, no-any-return]
+                            projection={'_id': False, 'events': False, 'traces': False})
 
 
-def get_trace(filter):
-    run = db.runs.find_one(filter,
+def get_trace(filter: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
+    run = db.runs.find_one(filter,  # type: ignore[attr-defined]
                            projection={'_id': False, 'traces': True})
     if run is None:
         return None
 
-    return run['traces']
+    return run['traces']  # type: ignore[no-any-return]
 
 
-def add_run(run):
-    return db.runs.insert_one(run)
+def add_run(run: Dict[str, Any]) -> results.InsertOneResult:
+    return db.runs.insert_one(run)  # type: ignore[attr-defined]
 
 
-def update_run(filter, update):
-    return db.runs.update_one(filter, update)
+def update_run(filter: Dict[str, Any], update: Dict[str, Any]) -> results.UpdateResult:
+    return db.runs.update_one(filter, update)  # type: ignore[attr-defined]

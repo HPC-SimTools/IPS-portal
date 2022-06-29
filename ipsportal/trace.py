@@ -1,7 +1,9 @@
 import os
 import hashlib
 import requests
+from typing import Tuple, Union
 from flask import Blueprint, redirect, url_for
+from werkzeug.wrappers import Response
 from ipsportal.db import get_trace, get_run
 
 bp = Blueprint('trace', __name__)
@@ -10,7 +12,7 @@ JAEGER_HOSTNAME = os.environ.get('JAEGER_HOST', 'localhost')
 
 
 @bp.route("/gettrace/<int:runid>")
-def gettrace(runid):
+def gettrace(runid: int) -> Union[Tuple[str, int], Response]:
     run = get_run({"runid": runid})
 
     portal_runid = run['portal_runid']
@@ -37,5 +39,5 @@ def gettrace(runid):
 
 
 @bp.route("/jaeger/<path:trace>")
-def jaeger(trace):
+def jaeger(trace: str) -> Response:
     return redirect(f"http://{JAEGER_HOSTNAME}:16686/jaeger/{trace}")
