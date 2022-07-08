@@ -131,3 +131,12 @@ then to see the status of the job run
 ```shell
 rancher kubectl describe job.batch/manual-dump --namespace=ipsportal
 ```
+
+To restore from backup archive: upload to pod, extract, restore:
+
+```shell
+rancher kubectl get pods --namespace=ipsportal # get db pod name
+rancher kubectl cp mongodb-dump.archive.gz ipsportal/{pod-name}:/tmp
+rancher kubectl exec {pod-name} --namespace=ipsportal -- gunzip /tmp/mongodb-dump.archive.gz
+rancher kubectl exec {pod-name} --namespace=ipsportal -- mongorestore --archive=/tmp/mongodb-dump.archive --authenticationDatabase admin --username mongo --password password-CHANGE-ME
+```
