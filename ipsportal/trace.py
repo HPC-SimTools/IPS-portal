@@ -4,7 +4,7 @@ import requests
 from typing import Tuple, Union, List, Any, Dict
 from flask import Blueprint, redirect, url_for
 from werkzeug.wrappers import Response
-from ipsportal.db import get_trace, get_run
+from ipsportal.db import get_trace, get_portal_runid
 
 bp = Blueprint('trace', __name__)
 
@@ -13,9 +13,7 @@ JAEGER_HOSTNAME = os.environ.get('JAEGER_HOST', 'localhost')
 
 @bp.route("/gettrace/<int:runid>")
 def gettrace(runid: int) -> Union[Tuple[str, int], Response]:
-    run = get_run({"runid": runid})
-
-    portal_runid = run['portal_runid']
+    portal_runid = get_portal_runid(runid)
     traceID = hashlib.md5(portal_runid.encode()).hexdigest()
 
     try:

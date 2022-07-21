@@ -3,7 +3,7 @@ from typing import Tuple, Dict, Any, Optional
 from flask import Blueprint, jsonify, request, Response
 import pymongo
 import requests
-from ipsportal.db import get_runs, runs_count, get_events, get_run, get_trace, add_run, update_run
+from ipsportal.db import get_runs, runs_count, get_events, get_run, get_trace, add_run, update_run, get_child_runs, get_portal_runid
 from ipsportal.trace import send_trace
 
 bp = Blueprint('api', __name__)
@@ -12,6 +12,16 @@ bp = Blueprint('api', __name__)
 @bp.route("/api/runs")
 def runs() -> Tuple[Response, int]:
     return jsonify(get_runs()), 200
+
+
+@bp.route("/api/run/<string:portal_runid>/children")
+def child_runs(portal_runid: str) -> Tuple[Response, int]:
+    return jsonify(get_child_runs(filter={'parent_portal_runid': portal_runid})), 200
+
+
+@bp.route("/api/run/<int:runid>/children")
+def child_runs_runid(runid: int) -> Tuple[Response, int]:
+    return jsonify(get_child_runs(filter={'parent_portal_runid': get_portal_runid(runid)})), 200
 
 
 @bp.route("/api/run/<int:runid>/events")
@@ -75,7 +85,8 @@ def event() -> Tuple[Response, int]:
 
     required = {'code', 'eventtype', 'comment', 'walltime', 'phystimestamp', 'portal_runid', 'seqnum'}
     run_keys = {'user', 'host', 'state', 'rcomment', 'tokamak', 'shotno', 'simname', 'startat',
-                'stopat', 'sim_runid', 'outputprefix', 'tag', 'ips_version', 'portal_runid', 'ok', 'walltime'}
+                'stopat', 'sim_runid', 'outputprefix', 'tag', 'ips_version', 'portal_runid', 'ok', 'walltime',
+                'parent_portal_runid'}
 
     if not e.keys() >= required:
         return jsonify(message=f'Missing required data: {sorted(k for k in required if k not in e.keys())}'), 400

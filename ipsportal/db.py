@@ -34,7 +34,13 @@ db: LocalProxy = LocalProxy(get_db)
 
 
 def get_runs() -> List[Dict[str, Any]]:
-    return list(db.runs.find(projection={'_id': False, 'events': False, 'traces': False}))
+    return list(db.runs.find(filter={'parent_portal_runid': None},
+                             projection={'_id': False, 'events': False, 'traces': False}))
+
+
+def get_child_runs(filter: Dict[str, Any]) -> List[Dict[str, Any]]:
+    return list(db.runs.find(filter,
+                             projection={'_id': False, 'events': False, 'traces': False}))
 
 
 def runs_count() -> int:
@@ -68,3 +74,13 @@ def add_run(run: Dict[str, Any]) -> results.InsertOneResult:
 
 def update_run(filter: Dict[str, Any], update: Dict[str, Any]) -> results.UpdateResult:
     return db.runs.update_one(filter, update)
+
+
+def get_runid(portal_runid: str):
+    return db.runs.find_one(filter={'portal_runid': portal_runid},
+                            projection={'runid': True, '_id': False}).get('runid')
+
+
+def get_portal_runid(runid: int):
+    return db.runs.find_one(filter={'runid': runid},
+                            projection={'portal_runid': True, '_id': False}).get('portal_runid')
