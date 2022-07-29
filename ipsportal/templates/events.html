@@ -62,14 +62,10 @@
   </tr>
   <tr>
     <th>Trace</th>
-    {% if run.state == "Completed" %}
     {% if run.has_trace %}
     <td><a href="{{ url_for('trace.gettrace', runid=run.runid) }}">trace</a></td>
     {% else %}
     <td>no trace information available</td>
-    {% endif %}
-    {% else %}
-    <td>wait for run to finish</td>
     {% endif %}
   </tr>
   <tr>

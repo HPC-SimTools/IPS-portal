@@ -2,7 +2,9 @@ import time
 from typing import Tuple, Dict, Any, Optional
 from flask import Blueprint, jsonify, request, Response
 import pymongo
+import requests
 from ipsportal.db import get_runs, runs_count, get_events, get_run, get_trace, add_run, update_run
+from ipsportal.trace import send_trace
 
 bp = Blueprint('api', __name__)
 
@@ -110,6 +112,10 @@ def event() -> Tuple[Response, int]:
             update["$set"]["has_trace"] = True
         else:
             update["$set"] = {"has_trace": True}
+        try:
+            send_trace([trace])
+        except requests.exceptions.ConnectionError:
+            pass
 
     if update_run({'portal_runid': e.get('portal_runid'), "state": "Running"}, update).modified_count == 0:
         return jsonify(message='Invalid portal_runid'), 400
