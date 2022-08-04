@@ -80,7 +80,8 @@ def event() -> Tuple[Response, int]:
     if not e.keys() >= required:
         return jsonify(message=f'Missing required data: {sorted(k for k in required if k not in e.keys())}'), 400
 
-    e['created'] = time.strftime('%Y-%m-%d|%H:%M:%S%Z', time.localtime())
+    if 'time' not in e:
+        e['time'] = time.strftime('%Y-%m-%d|%H:%M:%S%Z', time.localtime())
 
     if e.get('eventtype') == "IPS_START":
         runid = runs_count()

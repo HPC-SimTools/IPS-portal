@@ -8,7 +8,7 @@ $(document).ready( function () {
         order: [[ 1, "desc" ]],
 	lengthMenu: [[10, 25, 100, -1], [10, 25, 100, "All"]],
 	columns: [
-	    {data: 'created',
+	    {data: 'time',
 	     defaultContent: ''},
 	    {data: 'seqnum',
 	     defaultContent: ''},
