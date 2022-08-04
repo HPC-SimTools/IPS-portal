@@ -27,7 +27,7 @@ def run(runid: int) -> Tuple[str, int]:
         return render_template("notfound.html", run=runid), 404
 
     if run.get('parent_portal_runid') is not None:
-        run['parent_runid'] = get_runid(run.get('parent_portal_runid'))
+        run['parent_runid'] = get_runid(str(run.get('parent_portal_runid')))
     else:
         run['parent_runid'] = None
     return render_template("events.html", run=run, columns=INDEX_COLUMNS), 200

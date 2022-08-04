@@ -3,7 +3,10 @@ from typing import Tuple, Dict, Any, Optional
 from flask import Blueprint, jsonify, request, Response
 import pymongo
 import requests
-from ipsportal.db import get_runs, runs_count, get_events, get_run, get_trace, add_run, update_run, get_child_runs, get_portal_runid
+import hashlib
+from ipsportal.db import (get_runs, runs_count, get_events, get_run,
+                          get_trace, add_run, update_run, get_child_runs, get_portal_runid,
+                          get_parent_portal_runid)
 from ipsportal.trace import send_trace
 
 bp = Blueprint('api', __name__)
@@ -60,7 +63,7 @@ def events(portal_runid: str) -> Tuple[Response, int]:
 @bp.route("/api/run/<int:runid>/trace")
 def trace_runid(runid: int) -> Tuple[Response, int]:
     trace = get_trace({'runid': runid})
-    if trace is None:
+    if trace == []:
         return jsonify(message=f"runid {runid} not found"), 404
 
     return jsonify(trace), 200
@@ -69,7 +72,7 @@ def trace_runid(runid: int) -> Tuple[Response, int]:
 @bp.route("/api/run/<string:portal_runid>/trace")
 def trace(portal_runid: str) -> Tuple[Response, int]:
     trace = get_trace({'portal_runid': portal_runid})
-    if trace is None:
+    if trace == []:
         return jsonify(message=f"portal_runid {portal_runid} not found"), 404
 
     return jsonify(trace), 200
@@ -124,12 +127,22 @@ def event() -> Tuple[Response, int]:
             update["$set"]["has_trace"] = True
         else:
             update["$set"] = {"has_trace": True}
+
+    update_result = update_run({'portal_runid': e.get('portal_runid'), "state": "Running"}, update)
+    if update_result.modified_count == 0:
+        return jsonify(message='Invalid portal_runid'), 400
+
+    if trace:
+        parent_portal_runid = get_parent_portal_runid(e['portal_runid'])
+        if parent_portal_runid:
+            trace2 = trace.copy()
+            trace2['traceId'] = hashlib.md5(parent_portal_runid.encode()).hexdigest()
         try:
-            send_trace([trace])
+            if parent_portal_runid:
+                send_trace([trace, trace2])
+            else:
+                send_trace([trace])
         except requests.exceptions.ConnectionError:
             pass
-
-    if update_run({'portal_runid': e.get('portal_runid'), "state": "Running"}, update).modified_count == 0:
-        return jsonify(message='Invalid portal_runid'), 400
 
     return jsonify(message=msg), 200

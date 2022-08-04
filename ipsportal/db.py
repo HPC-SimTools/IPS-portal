@@ -59,13 +59,21 @@ def get_run(filter: Dict[str, Any]) -> Dict[str, Any]:
                             projection={'_id': False, 'events': False, 'traces': False})
 
 
-def get_trace(filter: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
-    run = db.runs.find_one(filter,
-                           projection={'_id': False, 'traces': True})
-    if run is None:
-        return None
+def get_trace(filter: Dict[str, Any]) -> List[Dict[str, Any]]:
+    runs = db.runs.find(filter,
+                        projection={'_id': False, 'portal_runid': True, 'traces': True})
+    traces = []
+    for run in runs:
+        traces += run['traces']
+        portal_runid = run["portal_runid"]
+        traceId = run['traces'][-1]['traceId']
 
-    return run['traces']  # type: ignore[no-any-return]
+        # add all child traces
+        for trace in get_trace({'parent_portal_runid': portal_runid}):
+            trace['traceId'] = traceId
+            traces.append(trace)
+
+    return traces
 
 
 def add_run(run: Dict[str, Any]) -> results.InsertOneResult:
@@ -76,11 +84,16 @@ def update_run(filter: Dict[str, Any], update: Dict[str, Any]) -> results.Update
     return db.runs.update_one(filter, update)
 
 
-def get_runid(portal_runid: str):
+def get_runid(portal_runid: str) -> Any:
     return db.runs.find_one(filter={'portal_runid': portal_runid},
                             projection={'runid': True, '_id': False}).get('runid')
 
 
-def get_portal_runid(runid: int):
+def get_portal_runid(runid: int) -> Any:
     return db.runs.find_one(filter={'runid': runid},
                             projection={'portal_runid': True, '_id': False}).get('portal_runid')
+
+
+def get_parent_portal_runid(portal_runid: str) -> Any:
+    return db.runs.find_one(filter={'portal_runid': portal_runid},
+                            projection={'parent_portal_runid': True, '_id': False}).get('parent_portal_runid')
