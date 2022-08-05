@@ -136,14 +136,14 @@ def test_post_events(client):
     assert response.status_code == 200
     assert len(response.json) == 3
     event0 = response.json[0]
-    assert event0.pop('created')
+    assert event0.pop('time')
     assert event0 == start_event
     event1 = response.json[1]
-    assert event1.pop('created')
+    assert event1.pop('time')
     trace1 = event.pop('trace')
     assert event1 == event
     event2 = response.json[2]
-    assert event2.pop('created')
+    assert event2.pop('time')
     trace2 = end_event.pop('trace')
     assert event2 == end_event
 
@@ -152,13 +152,13 @@ def test_post_events(client):
     assert response.status_code == 200
     assert len(response.json) == 3
     event0 = response.json[0]
-    assert event0.pop('created')
+    assert event0.pop('time')
     assert event0 == start_event
     event1 = response.json[1]
-    assert event1.pop('created')
+    assert event1.pop('time')
     assert event1 == event
     event2 = response.json[2]
-    assert event2.pop('created')
+    assert event2.pop('time')
     assert event2 == end_event
 
     # check trace with runid
