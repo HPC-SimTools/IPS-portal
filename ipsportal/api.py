@@ -66,7 +66,7 @@ def trace(portal_runid: str) -> Tuple[Response, int]:
 @bp.route("/", methods=['POST'])
 @bp.route("/api/event", methods=['POST'])
 def event() -> Tuple[Response, int]:
-    e: Optional[Dict[str, Any]] = request.json
+    e: Optional[Dict[str, Any]] = request.get_json()  # type: ignore[attr-defined]
 
     if e is None:
         return jsonify(message="Missing data"), 400

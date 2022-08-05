@@ -34,27 +34,27 @@ db: LocalProxy = LocalProxy(get_db)
 
 
 def get_runs() -> List[Dict[str, Any]]:
-    return list(db.runs.find(projection={'_id': False, 'events': False, 'traces': False}))  # type: ignore[attr-defined]
+    return list(db.runs.find(projection={'_id': False, 'events': False, 'traces': False}))
 
 
 def runs_count() -> int:
-    return db.runs.count_documents({})  # type: ignore[attr-defined, no-any-return]
+    return int(db.runs.count_documents({}))
 
 
 def get_events(filter: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
-    runs = db.runs.find_one(filter, projection={'_id': False, 'events': True})  # type: ignore[attr-defined]
+    runs = db.runs.find_one(filter, projection={'_id': False, 'events': True})
     if runs is None:
         return None
     return runs['events']  # type: ignore[no-any-return]
 
 
 def get_run(filter: Dict[str, Any]) -> Dict[str, Any]:
-    return db.runs.find_one(filter,  # type: ignore[attr-defined, no-any-return]
+    return db.runs.find_one(filter,  # type: ignore[no-any-return]
                             projection={'_id': False, 'events': False, 'traces': False})
 
 
 def get_trace(filter: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
-    run = db.runs.find_one(filter,  # type: ignore[attr-defined]
+    run = db.runs.find_one(filter,
                            projection={'_id': False, 'traces': True})
     if run is None:
         return None
@@ -63,8 +63,8 @@ def get_trace(filter: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
 
 
 def add_run(run: Dict[str, Any]) -> results.InsertOneResult:
-    return db.runs.insert_one(run)  # type: ignore[attr-defined]
+    return db.runs.insert_one(run)
 
 
 def update_run(filter: Dict[str, Any], update: Dict[str, Any]) -> results.UpdateResult:
-    return db.runs.update_one(filter, update)  # type: ignore[attr-defined]
+    return db.runs.update_one(filter, update)
