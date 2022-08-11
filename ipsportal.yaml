@@ -131,6 +131,8 @@ spec:
           value: jaeger
         - name: MONGO_HOST
           value: db
+        - name: TZ
+          value: America/Los_Angeles
         securityContext:
           capabilities:
             drop:
