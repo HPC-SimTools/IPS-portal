@@ -1,5 +1,7 @@
 # IPS Portal
 
+Documentation for how to use IPS-framework with this IPS-portal can be found at https://ips-framework.readthedocs.io/en/latest/user_guides/portal_guides.html
+
 ## Run in development mode
 
 Setup environment with python venv and install IPS-portal:
@@ -16,7 +18,7 @@ If that fails with `ERROR: File "setup.py" not found.` try upgrading pip first:
 python -m pip install --upgrade pip
 ```
 
-To run the appilcation in debug mode
+To run the application in debug mode
 
 ```shell
 export FLASK_APP=ipsportal
@@ -31,14 +33,12 @@ Go to http://localhost:5000
 ### Requires mongo
 
 ```shell
-docker pull mongo:4
 docker run --rm -p 27017:27017 -v /tmp/db:/data/db mongo:4
 ```
 
 ### For profile tracing
 
 ```shell
-docker pull jaegertracing/all-in-one:1.35
 docker run --rm -p 9411:9411 -p 16686:16686 --env COLLECTOR_ZIPKIN_HOST_PORT=9411 --env QUERY_BASE_PATH=/jaeger jaegertracing/all-in-one:1.35
 ```
 
@@ -57,3 +57,8 @@ docker-compose up --build
 ```
 
 Go to http://localhost
+
+
+---
+[![CI](https://github.com/HPC-SimTools/IPS-portal/actions/workflows/workflows.yml/badge.svg)](https://github.com/HPC-SimTools/IPS-portal/actions/workflows/workflows.yml)
+[![codecov](https://codecov.io/gh/HPC-SimTools/IPS-portal/branch/main/graph/badge.svg)](https://codecov.io/gh/HPC-SimTools/IPS-portal)
