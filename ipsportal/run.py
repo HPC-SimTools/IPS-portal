@@ -4,20 +4,10 @@ from ipsportal.db import get_run, get_runid
 
 bp = Blueprint('index', __name__)
 
-INDEX_COLUMNS = ({'name': 'RunID', 'param': 'runid'},
-                 {'name': 'Status', 'param': 'state'},
-                 {'name': 'Comment', 'param': 'rcomment'},
-                 {'name': 'Sim Name', 'param': 'simname'},
-                 {'name': 'Host', 'param': 'host'},
-                 {'name': 'User', 'param': 'user'},
-                 {'name': 'Start Time', 'param': 'startat'},
-                 {'name': 'Stop Time', 'param': 'stopat'},
-                 {'name': 'Walltime', 'param': 'walltime'})
-
 
 @bp.route("/")
 def index() -> Tuple[str, int]:
-    return render_template("index.html", columns=INDEX_COLUMNS), 200
+    return render_template("index.html"), 200
 
 
 @bp.route("/<int:runid>")
@@ -30,4 +20,4 @@ def run(runid: int) -> Tuple[str, int]:
         run['parent_runid'] = get_runid(str(run.get('parent_portal_runid')))
     else:
         run['parent_runid'] = None
-    return render_template("events.html", run=run, columns=INDEX_COLUMNS), 200
+    return render_template("events.html", run=run), 200
