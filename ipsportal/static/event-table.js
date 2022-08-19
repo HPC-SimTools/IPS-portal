@@ -5,6 +5,7 @@ $(document).ready( function () {
 	    dataSrc: ''
 	},
 	deferRender: true,
+	responsive: true,
         order: [[ 1, "desc" ]],
 	lengthMenu: [[10, 25, 100, -1], [10, 25, 100, "All"]],
 	columns: [

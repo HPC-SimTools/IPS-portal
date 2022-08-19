@@ -5,6 +5,7 @@ $(document).ready( function () {
 	    dataSrc: ''
 	},
 	deferRender: true,
+	responsive: true,
 	order: [[ 0, 'desc' ]],
 	columns: [
 	    {data: 'runid',
@@ -12,23 +13,31 @@ $(document).ready( function () {
 		 if(type === 'display'){
                      data = `<a href="/${data}">${data}</a>`;
 		 }
-		 return data;}},
+		 return data;},
+	     responsivePriority: 1},
 	    {data: 'state',
-	     defaultContent: ''},
+	     defaultContent: '',
+	     responsivePriority: 8},
 	    {data: 'rcomment',
-	     defaultContent: ''},
+	     defaultContent: '',
+	     responsivePriority: 4},
 	    {data: 'simname',
-	     defaultContent: ''},
+	     defaultContent: '',
+	     responsivePriority: 2},
 	    {data: 'host',
 	     defaultContent: ''},
 	    {data: 'user',
-	     defaultContent: ''},
+	     defaultContent: '',
+	     responsivePriority: 5},
 	    {data: 'startat',
-	     defaultContent: ''},
+	     defaultContent: '',
+	     responsivePriority: 6},
 	    {data: 'stopat',
-	     defaultContent: ''},
+	     defaultContent: '',
+	     responsivePriority: 7},
 	    {data: 'walltime',
-	     defaultContent: ''}
+	     defaultContent: '',
+	     responsivePriority: 3}
 	],
 	buttons: {
 	    buttons: [
