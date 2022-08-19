@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
-{% block header %}
+{% block head %}
 <script src="{{ url_for('static', filename='runs-table.js') }}" defer></script>
-
-<h4>{% block title %}Run Index{% endblock %}</h4>
 {% endblock %}
 
 {% block content %}
 
-<table id="runs-table" class="table table-striped table-bordered">
+<h4>{% block title %}Run Index{% endblock %}</h4>
+
+<table id="runs-table" class="table table-striped table-bordered" style="width:100%">
   <thead>
     <tr> {% for column in columns %}
       <th>{{ column.name }}</th> {% endfor %}

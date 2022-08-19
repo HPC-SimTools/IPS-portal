@@ -1,12 +1,12 @@
 {% extends 'base.html' %}
 
-{% block header %}
-<h4>{% block title %}Run - {{ run.runid }}{% endblock %}</h4>
+{% block head %}
 <script src="{{ url_for('static', filename='event-table.js') }}" defer></script>
 <script src="{{ url_for('static', filename='child-runs-table.js') }}" defer></script>
 {% endblock %}
 
 {% block content %}
+<h4>{% block title %}Run - {{ run.runid }}{% endblock %}</h4>
 <table class="table table-sm table-primary table-bordered" style="width:50%">
   <tbody>
   <tr>
