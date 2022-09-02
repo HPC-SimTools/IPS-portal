@@ -133,15 +133,18 @@ def event() -> Tuple[Response, int]:
         return jsonify(message='Invalid portal_runid'), 400
 
     if trace:
-        parent_portal_runid = get_parent_portal_runid(e['portal_runid'])
-        if parent_portal_runid:
-            trace2 = trace.copy()
-            trace2['traceId'] = hashlib.md5(parent_portal_runid.encode()).hexdigest()
+        traces = [trace]
+
+        # add traces to parent run recursively
+        portal_runid = e['portal_runid']
+        while parent_portal_runid := get_parent_portal_runid(portal_runid):
+            new_trace = trace.copy()
+            new_trace['traceId'] = hashlib.md5(parent_portal_runid.encode()).hexdigest()
+            traces.append(new_trace)
+            portal_runid = parent_portal_runid
+
         try:
-            if parent_portal_runid:
-                send_trace([trace, trace2])
-            else:
-                send_trace([trace])
+            send_trace(traces)
         except requests.exceptions.ConnectionError:
             pass
 
