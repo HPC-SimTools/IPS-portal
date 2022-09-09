@@ -1,6 +1,6 @@
 import time
 from typing import Tuple, Dict, Any, Optional
-from flask import Blueprint, jsonify, request, Response
+from flask import Blueprint, jsonify, request, Response, current_app
 import pymongo
 import requests
 import hashlib
@@ -84,6 +84,7 @@ def event() -> Tuple[Response, int]:
     e: Optional[Dict[str, Any]] = request.get_json()  # type: ignore[attr-defined]
 
     if e is None:
+        current_app.logger.error("Missing data")
         return jsonify(message="Missing data"), 400
 
     required = {'code', 'eventtype', 'comment', 'walltime', 'phystimestamp', 'portal_runid', 'seqnum'}
@@ -92,6 +93,7 @@ def event() -> Tuple[Response, int]:
                 'parent_portal_runid'}
 
     if not e.keys() >= required:
+        current_app.logger.error(f"Missing required data: {e}")
         return jsonify(message=f'Missing required data: {sorted(k for k in required if k not in e.keys())}'), 400
 
     if 'time' not in e:
@@ -107,6 +109,7 @@ def event() -> Tuple[Response, int]:
         try:
             add_run(run_dict)
         except pymongo.errors.DuplicateKeyError:
+            current_app.logger.error(f"Duplicate Key {run_dict}")
             return jsonify(message="Duplicate portal_runid Key"), 400
         return jsonify(message="New run created", runid=runid), 200
 
@@ -130,6 +133,7 @@ def event() -> Tuple[Response, int]:
 
     update_result = update_run({'portal_runid': e.get('portal_runid'), "state": "Running"}, update)
     if update_result.modified_count == 0:
+        current_app.logger.error(f"Invalid portal_runid {update}")
         return jsonify(message='Invalid portal_runid'), 400
 
     if trace:
