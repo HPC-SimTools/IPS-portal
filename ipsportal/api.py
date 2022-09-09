@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, request, Response, current_app
 import pymongo
 import requests
 import hashlib
-from ipsportal.db import (get_runs, runs_count, get_events, get_run,
+from ipsportal.db import (get_runs, get_events, get_run, next_runid,
                           get_trace, add_run, update_run, get_child_runs, get_portal_runid,
                           get_parent_portal_runid)
 from ipsportal.trace import send_trace
@@ -100,7 +100,7 @@ def event() -> Tuple[Response, int]:
         e['time'] = time.strftime('%Y-%m-%d|%H:%M:%S%Z', time.localtime())
 
     if e.get('eventtype') == "IPS_START":
-        runid = runs_count()
+        runid = next_runid()
         run_dict: Dict[str, Any] = {key: e[key] for key in run_keys if key in e}
         run_dict['runid'] = runid
         run_dict['events'] = [e]

@@ -43,10 +43,6 @@ def get_child_runs(filter: Dict[str, Any]) -> List[Dict[str, Any]]:
                              projection={'_id': False, 'events': False, 'traces': False}))
 
 
-def runs_count() -> int:
-    return int(db.runs.count_documents({}))
-
-
 def get_events(filter: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
     runs = db.runs.find_one(filter, projection={'_id': False, 'events': True})
     if runs is None:
@@ -97,3 +93,7 @@ def get_portal_runid(runid: int) -> Any:
 def get_parent_portal_runid(portal_runid: str) -> Any:
     return db.runs.find_one(filter={'portal_runid': portal_runid},
                             projection={'parent_portal_runid': True, '_id': False}).get('parent_portal_runid')
+
+
+def next_runid() -> int:
+    return int(db.runid.find_one_and_update({}, {"$inc": {"runid": 1}}, upsert=True, new=True).get('runid', 0))
