@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 cd ips_test
 ips.py --version
 ips.py --config=sim.conf --platform=platform.conf
@@ -7,6 +7,8 @@ newest_runid=$(curl -s http://localhost/api/runs | jq .[-1].runid)
 run_json=$(curl -s http://localhost/api/run/$newest_runid)
 # check if trace information exist, it does for IPS >= 0.6.0
 has_trace=$(python -c "import ipsframework; print('no') if ipsframework.__version__ in [\"0.3.0\", \"0.4.1\", \"0.5.0\"] else print('yes')")
+
+new_trace=$(python -c "import ipsframework; print('no') if ipsframework.__version__ in [\"0.3.0\", \"0.4.1\", \"0.5.0\", \"0.6.0\"] else print('yes')")
 
 # state
 if [ $(echo $run_json | jq .state) != '"Completed"' ]; then echo "state"; exit 1; fi
@@ -42,7 +44,11 @@ if [ $has_trace == "yes" ]; then
     # Check number of events
     if [ $(echo $trace | jq length) -ne 5 ]; then echo "yes number_of_traces"; exit 1; fi
     # Service name
-    if [ $(echo $trace | jq .[-1].localEndpoint.serviceName) != '"FRAMEWORK@Framework@0"' ]; then echo "localEndpoint.serviceName"; exit 1; fi
+    if [ $new_trace == "yes" ]; then
+	if [ $(echo $trace | jq .[-1].localEndpoint.serviceName) != '"simulation@FRAMEWORK@Framework@0"' ]; then echo "localEndpoint.serviceName"; exit 1; fi
+    else
+	if [ $(echo $trace | jq .[-1].localEndpoint.serviceName) != '"FRAMEWORK@Framework@0"' ]; then echo "localEndpoint.serviceName"; exit 1; fi
+    fi
 else
     # Check number of events
     if [ $(echo $trace | jq length) -ne 0 ]; then echo "no number_of_traces"; exit 1; fi
