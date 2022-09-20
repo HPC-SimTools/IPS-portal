@@ -1,5 +1,5 @@
 import time
-from typing import Tuple, Dict, Any, Optional
+from typing import Tuple, Dict, Any, Optional, List, Union
 from flask import Blueprint, jsonify, request, Response, current_app
 import pymongo
 import requests
@@ -81,75 +81,96 @@ def trace(portal_runid: str) -> Tuple[Response, int]:
 @bp.route("/", methods=['POST'])
 @bp.route("/api/event", methods=['POST'])
 def event() -> Tuple[Response, int]:
-    e: Optional[Dict[str, Any]] = request.get_json()  # type: ignore[attr-defined]
+    event_list: Optional[Union[List[Dict[str, Any]], Dict[str, Any]]] = request.get_json()  # type: ignore[attr-defined]
 
-    if e is None:
+    if event_list is None:
         current_app.logger.error("Missing data")
         return jsonify(message="Missing data"), 400
 
-    required = {'code', 'eventtype', 'comment', 'walltime', 'phystimestamp', 'portal_runid', 'seqnum'}
-    run_keys = {'user', 'host', 'state', 'rcomment', 'tokamak', 'shotno', 'simname', 'startat',
-                'stopat', 'sim_runid', 'outputprefix', 'tag', 'ips_version', 'portal_runid', 'ok', 'walltime',
-                'parent_portal_runid'}
+    successes = 0
+    errors = []
 
-    if not e.keys() >= required:
-        current_app.logger.error(f"Missing required data: {e}")
-        return jsonify(message=f'Missing required data: {sorted(k for k in required if k not in e.keys())}'), 400
+    if isinstance(event_list, dict):
+        event_list = [event_list]
 
-    if 'time' not in e:
-        e['time'] = time.strftime('%Y-%m-%d|%H:%M:%S%Z', time.localtime())
+    output: Dict[str, Any] = {}
+    output['message'] = "{} events added to run"
 
-    if e.get('eventtype') == "IPS_START":
-        runid = next_runid()
-        run_dict: Dict[str, Any] = {key: e[key] for key in run_keys if key in e}
-        run_dict['runid'] = runid
-        run_dict['events'] = [e]
-        run_dict['traces'] = []
-        run_dict['has_trace'] = False
-        try:
-            add_run(run_dict)
-        except pymongo.errors.DuplicateKeyError:
-            current_app.logger.error(f"Duplicate Key {run_dict}")
-            return jsonify(message="Duplicate portal_runid Key"), 400
-        return jsonify(message="New run created", runid=runid), 200
+    for e in event_list:
 
-    msg = "Event added to run"
+        required = {'code', 'eventtype', 'comment', 'walltime', 'phystimestamp', 'portal_runid', 'seqnum'}
+        run_keys = {'user', 'host', 'state', 'rcomment', 'tokamak', 'shotno', 'simname', 'startat',
+                    'stopat', 'sim_runid', 'outputprefix', 'tag', 'ips_version', 'portal_runid', 'ok', 'walltime',
+                    'parent_portal_runid'}
 
-    update: Dict[str, Any] = {"$push": {"events": e}}
+        if not e.keys() >= required:
+            current_app.logger.error(f"Missing required data: {e}")
+            return jsonify(message=f'Missing required data: {sorted(k for k in required if k not in e.keys())}'), 400
 
-    if e.get('eventtype') == "IPS_END":
-        run_dict = {key: e[key] for key in run_keys if key in e}
-        update["$set"] = run_dict
-        msg = "Event added to run and run ended"
-    else:
-        update["$set"] = {'walltime': e.get('walltime')}
+        if 'time' not in e:
+            e['time'] = time.strftime('%Y-%m-%d|%H:%M:%S%Z', time.localtime())
 
-    if trace := e.pop('trace', False):
-        update["$push"]["traces"] = trace
-        if "$set" in update:
-            update["$set"]["has_trace"] = True
+        if e.get('eventtype') == "IPS_START":
+            runid = next_runid()
+            run_dict: Dict[str, Any] = {key: e[key] for key in run_keys if key in e}
+            run_dict['runid'] = runid
+            run_dict['events'] = [e]
+            run_dict['traces'] = []
+            run_dict['has_trace'] = False
+            try:
+                add_run(run_dict)
+            except pymongo.errors.DuplicateKeyError:
+                current_app.logger.error(f"Duplicate Key {run_dict}")
+                errors.append("Duplicate portal_runid Key")
+                continue
+            successes += 1
+            output['message'] = "New run created and " + output['message']
+            output['runid'] = runid
+            continue
+
+        update: Dict[str, Any] = {"$push": {"events": e}}
+
+        if e.get('eventtype') == "IPS_END":
+            run_dict = {key: e[key] for key in run_keys if key in e}
+            update["$set"] = run_dict
+            output['message'] = output['message'] + " and run ended"
         else:
-            update["$set"] = {"has_trace": True}
+            update["$set"] = {'walltime': e.get('walltime')}
 
-    update_result = update_run({'portal_runid': e.get('portal_runid'), "state": "Running"}, update)
-    if update_result.modified_count == 0:
-        current_app.logger.error(f"Invalid portal_runid {update}")
-        return jsonify(message='Invalid portal_runid'), 400
+        if trace := e.pop('trace', False):
+            update["$push"]["traces"] = trace
+            if "$set" in update:
+                update["$set"]["has_trace"] = True
+            else:
+                update["$set"] = {"has_trace": True}
 
-    if trace:
-        traces = [trace]
+        update_result = update_run({'portal_runid': e.get('portal_runid'), "state": "Running"}, update)
+        if update_result.modified_count == 0:
+            current_app.logger.error(f"Invalid portal_runid {update}")
+            errors.append('Invalid portal_runid')
+            continue
 
-        # add traces to parent run recursively
-        portal_runid = e['portal_runid']
-        while parent_portal_runid := get_parent_portal_runid(portal_runid):
-            new_trace = trace.copy()
-            new_trace['traceId'] = hashlib.md5(parent_portal_runid.encode()).hexdigest()
-            traces.append(new_trace)
-            portal_runid = parent_portal_runid
+        if trace:
+            traces = [trace]
 
-        try:
-            send_trace(traces)
-        except requests.exceptions.ConnectionError:
-            pass
+            # add traces to parent run recursively
+            portal_runid = e['portal_runid']
+            while parent_portal_runid := get_parent_portal_runid(portal_runid):
+                new_trace = trace.copy()
+                new_trace['traceId'] = hashlib.md5(parent_portal_runid.encode()).hexdigest()
+                traces.append(new_trace)
+                portal_runid = parent_portal_runid
 
-    return jsonify(message=msg), 200
+            try:
+                send_trace(traces)
+            except requests.exceptions.ConnectionError:
+                pass
+
+        successes += 1
+
+    output['message'] = output['message'].format(successes)
+
+    if errors:
+        return jsonify(**output, errors=errors), 400
+
+    return jsonify(**output), 200

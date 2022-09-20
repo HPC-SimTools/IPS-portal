@@ -32,7 +32,7 @@ def test_post_event(client):
     }
     )
     assert response.status_code == 200
-    assert response.json['message'] == 'New run created'
+    assert response.json['message'] == 'New run created and 1 events added to run'
     runid = response.json['runid']
 
     response = client.post("/", json={
@@ -65,7 +65,7 @@ def test_post_event(client):
     )
 
     assert response.status_code == 200
-    assert response.json['message'] == "Event added to run"
+    assert response.json['message'] == "1 events added to run"
 
     response = client.post("/", json={
           "code": "Framework",
@@ -91,7 +91,7 @@ def test_post_event(client):
         }
     )
     assert response.status_code == 200
-    assert response.json['message'] == "Event added to run"
+    assert response.json['message'] == "1 events added to run"
 
     response = client.post("/", json={
         'code': "Framework",
@@ -120,7 +120,7 @@ def test_post_event(client):
     })
 
     assert response.status_code == 200
-    assert response.json['message'] == "Event added to run and run ended"
+    assert response.json['message'] == "1 events added to run and run ended"
 
     response = client.get("/")
     assert response.status_code == 200

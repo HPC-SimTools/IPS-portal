@@ -22,7 +22,8 @@ def test_post_events(client):
 
     assert response.status_code == 200
     assert "message" in response.json
-    assert response.json["message"] == "New run created"
+    assert response.json["message"] == "New run created and 1 events added to run"
+    assert "errors" not in response.json
     assert 'runid' in response.json
     runid = response.json['runid']
 
@@ -77,7 +78,8 @@ def test_post_events(client):
 
     assert response.status_code == 200
     assert "message" in response.json
-    assert response.json["message"] == "Event added to run"
+    assert response.json["message"] == "1 events added to run"
+    assert "errors" not in response.json
 
     # check run info, should be unchanged from start except has_trace
     response = client.get(f"/api/run/{portal_runid}")
@@ -119,7 +121,7 @@ def test_post_events(client):
 
     assert response.status_code == 200
     assert "message" in response.json
-    assert response.json["message"] == "Event added to run and run ended"
+    assert response.json["message"] == "1 events added to run and run ended"
 
     # check run info, should be updated
     response = client.get(f"/api/run/{portal_runid}")
@@ -180,7 +182,9 @@ def test_post_events(client):
 
     assert response.status_code == 400
     assert "message" in response.json
-    assert response.json["message"] == "Invalid portal_runid"
+    assert response.json["message"] == "0 events added to run"
+    assert "errors" in response.json
+    assert response.json["errors"] == ["Invalid portal_runid"]
 
 
 def test_invalid_portal_id(client):
@@ -200,7 +204,9 @@ def test_invalid_portal_id(client):
 
     assert response.status_code == 400
     assert "message" in response.json
-    assert response.json["message"] == "Invalid portal_runid"
+    assert response.json["message"] == "0 events added to run"
+    assert "errors" in response.json
+    assert response.json["errors"] == ["Invalid portal_runid"]
 
     event = {
         "code": "Framework",
@@ -216,7 +222,9 @@ def test_invalid_portal_id(client):
 
     assert response.status_code == 400
     assert "message" in response.json
-    assert response.json["message"] == "Invalid portal_runid"
+    assert response.json["message"] == "0 events added to run"
+    assert "errors" in response.json
+    assert response.json["errors"] == ["Invalid portal_runid"]
 
 
 def test_missing_json(client):
@@ -255,14 +263,17 @@ def test_duplicate_portal_runid(client):
 
     assert response.status_code == 200
     assert "message" in response.json
-    assert response.json["message"] == "New run created"
+    assert response.json["message"] == "New run created and 1 events added to run"
+    assert "errors" not in response.json
     assert 'runid' in response.json
 
     # this should fail
     response = client.post("/api/event", json=start_event)
     assert response.status_code == 400
     assert "message" in response.json
-    assert response.json["message"] == "Duplicate portal_runid Key"
+    assert response.json["message"] == "0 events added to run"
+    assert "errors" in response.json
+    assert response.json["errors"] == ["Duplicate portal_runid Key"]
     assert 'runid' not in response.json
 
 
