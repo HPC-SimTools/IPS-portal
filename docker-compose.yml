@@ -30,6 +30,11 @@ services:
       - app
       - jaeger
 
+  stats:
+    image: graphiteapp/graphite-statsd
+    ports:
+      - 8080:80
+
   mongo-express:
     image: mongo-express
     ports:
