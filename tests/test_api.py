@@ -304,3 +304,49 @@ def test_portal_runid_not_found(client):
     response = client.get(f"/api/run/{portal_runid}/trace")
     assert response.status_code == 404
     assert response.json['message'] == f"portal_runid {portal_runid} not found"
+
+
+def test_post_event_array(client):
+    current_number_of_runs = len(client.get("/api/runs").json)
+
+    portal_runid = str(uuid1())
+    events = [
+        {
+            'code': "Framework",
+            'eventtype': "IPS_START",
+            "ok": True,
+            'comment': f"Starting IPS Simulation {portal_runid}",
+            'walltime': "0.01",
+            "state": "Running",
+            "startat": "2022-05-03|15:41:07EDT",
+            "rcomment": f"CI Test {portal_runid}",
+            'phystimestamp': -1,
+            'portal_runid': portal_runid,
+            'seqnum': 0
+        },
+        {
+            'code': "Framework",
+            'eventtype': "IPS_END",
+            "ok": True,
+            'comment': f"Simulation Ended {portal_runid}",
+            'walltime': "26.70",
+            "state": "Complete",
+            "stopat": "2022-05-03|15:41:34EDT",
+            'phystimestamp': 1,
+            'portal_runid': portal_runid,
+            'seqnum': 1,
+        }]
+    response = client.post("/api/event", json=events)
+
+    assert response.status_code == 200
+    assert "message" in response.json
+    assert response.json["message"] == "New run created and 2 events added to run and run ended"
+    assert "errors" not in response.json
+
+    new_number_of_runs = len(client.get("/api/runs").json)
+
+    assert new_number_of_runs - current_number_of_runs == 1
+
+    response = client.get(f"/api/run/{portal_runid}/events")
+    assert response.status_code == 200
+    assert len(response.json) == 2

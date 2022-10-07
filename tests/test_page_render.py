@@ -1,6 +1,7 @@
 from uuid import uuid1
 import hashlib
 import os
+import time
 import requests
 
 
@@ -141,6 +142,19 @@ def test_post_event(client):
     assert f"/jaeger/trace/{traceID}" in response.text
 
     # check trace was sent to jaeger
+    r = requests.get(f"http://{os.environ.get('JAEGER_HOST', 'localhost')}:16686/jaeger/api/traces/{traceID}")
+    assert "data" in r.json()
+    assert "traceID" in r.json()["data"][0]
+    assert r.json()["data"][0]["traceID"] == traceID
+
+    # restart jaeger and check that the trace still works
+    os.system("docker container restart jaeger")
+    time.sleep(1)
+
+    response = client.get(f"/gettrace/{runid}")
+    assert response.status_code == 302
+    assert f"/jaeger/trace/{traceID}" in response.text
+
     r = requests.get(f"http://{os.environ.get('JAEGER_HOST', 'localhost')}:16686/jaeger/api/traces/{traceID}")
     assert "data" in r.json()
     assert "traceID" in r.json()["data"][0]
