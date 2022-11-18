@@ -1,14 +1,14 @@
 from typing import List, Dict, Any, Optional
-from pymongo import MongoClient, ASCENDING, DESCENDING, database, results
+from pymongo import MongoClient, ASCENDING, DESCENDING
 from werkzeug.local import LocalProxy
 from flask import g, Flask
 import os
 
 
-def get_db() -> database.Database:
+def get_db() -> Any:
     if 'db' not in g:
         client = MongoClient(host=os.environ.get('MONGO_HOST', 'localhost'),
-                             port=os.environ.get('MONGO_PORT', 27017),
+                             port=int(os.environ.get('MONGO_PORT', 27017)),
                              username=os.environ.get('MONGO_USERNAME'),
                              password=os.environ.get('MONGO_PASSWORD'))
         client.portal.runs.create_index([('runid', DESCENDING)], unique=True)
@@ -72,11 +72,11 @@ def get_trace(filter: Dict[str, Any]) -> List[Dict[str, Any]]:
     return traces
 
 
-def add_run(run: Dict[str, Any]) -> results.InsertOneResult:
+def add_run(run: Dict[str, Any]) -> Any:
     return db.runs.insert_one(run)
 
 
-def update_run(filter: Dict[str, Any], update: Dict[str, Any]) -> results.UpdateResult:
+def update_run(filter: Dict[str, Any], update: Dict[str, Any]) -> Any:
     return db.runs.update_one(filter, update)
 
 
