@@ -67,7 +67,7 @@ Deploy
 
 Jaeger
  - Name: jaeger
- - Docker Image: jaegertracing/all-in-one:1.39
+ - Docker Image: jaegertracing/all-in-one:1.38
  - Namespace: ipsportal
  - Environment Variables
    - Add Variable
