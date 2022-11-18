@@ -33,13 +33,13 @@ Go to http://localhost:5000
 ### Requires mongo
 
 ```shell
-docker run --rm -p 27017:27017 -v /tmp/db:/data/db mongo:4
+docker run --rm -p 27017:27017 -v /tmp/db:/data/db mongo:6
 ```
 
 ### For profile tracing
 
 ```shell
-docker run --rm -p 9411:9411 -p 16686:16686 --env COLLECTOR_ZIPKIN_HOST_PORT=9411 --env QUERY_BASE_PATH=/jaeger jaegertracing/all-in-one:1.35
+docker run --rm -p 9411:9411 -p 16686:16686 --env COLLECTOR_ZIPKIN_HOST_PORT=9411 --env QUERY_BASE_PATH=/jaeger jaegertracing/all-in-one:1.39
 ```
 
 ### To view current state of the mongo db

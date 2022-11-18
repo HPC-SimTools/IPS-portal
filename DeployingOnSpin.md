@@ -4,7 +4,7 @@
 
 Deploy
  - Name: db
- - Docker Image: mongo:4
+ - Docker Image: mongo:6
  - Namespace: ipsportal
  - Environment Variables
    - Add Variable
@@ -67,7 +67,7 @@ Deploy
 
 Jaeger
  - Name: jaeger
- - Docker Image: jaegertracing/all-in-one:1.35
+ - Docker Image: jaegertracing/all-in-one:1.39
  - Namespace: ipsportal
  - Environment Variables
    - Add Variable

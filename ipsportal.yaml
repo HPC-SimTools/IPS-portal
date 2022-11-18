@@ -32,7 +32,7 @@ spec:
     spec:
       containers:
       - name: db
-        image: mongo:4
+        image: mongo:6
         env:
         - name: MONGO_INITDB_ROOT_USERNAME_FILE
           value: /secrets/MONGO_USERNAME
@@ -81,7 +81,7 @@ spec:
     spec:
       containers:
       - name: jaeger
-        image: jaegertracing/all-in-one:1.35
+        image: jaegertracing/all-in-one:1.39
         env:
         - name: COLLECTOR_ZIPKIN_HOST_PORT
           value: "9411"

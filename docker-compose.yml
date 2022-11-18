@@ -1,7 +1,7 @@
 version: '3'
 services:
   db:
-    image: mongo:4
+    image: mongo:6
     restart: unless-stopped
 
   app:
@@ -15,7 +15,7 @@ services:
      - db
 
   jaeger:
-    image: jaegertracing/all-in-one:1.35
+    image: jaegertracing/all-in-one:1.39
     environment:
       COLLECTOR_ZIPKIN_HOST_PORT: 9411
       QUERY_BASE_PATH: /jaeger
