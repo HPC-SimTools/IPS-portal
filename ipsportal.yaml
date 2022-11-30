@@ -226,6 +226,8 @@ spec:
               value: "7"
             securityContext:
               capabilities:
+                add:
+                - NET_BIND_SERVICE
                 drop:
                 - ALL
               runAsNonRoot: true
@@ -235,10 +237,10 @@ spec:
               name: backup
           restartPolicy: Never
           securityContext:
-            fsGroup: 59432
+            fsGroup: 62365
           volumes:
           - hostPath:
-              path: /global/u1/r/rwp/ipsportal_backup
+              path: /global/cfs/cdirs/atom/users/ipsportal
               type: Directory
             name: backup
   schedule: 12 3 * * *

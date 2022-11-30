@@ -132,6 +132,12 @@ then to see the status of the job run
 rancher kubectl describe job.batch/manual-dump --namespace=ipsportal
 ```
 
+you can delete the jobs by
+
+```shell
+rancher kubectl delete job manual-dump --namespace=ipsportal
+```
+
 To restore from backup archive: upload to pod, extract, restore:
 
 ```shell
