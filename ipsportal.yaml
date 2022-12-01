@@ -5,6 +5,7 @@ data:
   MONGO_PASSWORD: cGFzc3dvcmQtQ0hBTkdFLU1F
   ME_USERNAME: bW9uZ28=
   ME_PASSWORD: cGFzc3dvcmQ=
+  bearer-token: update
 metadata:
   namespace: ipsportal
   name: mongo-secrets
@@ -193,6 +194,44 @@ spec:
       - name: secrets
         secret:
           secretName: mongo-secrets
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  namespace: ipsportal
+  name: certbot-nginx
+  labels:
+    app: ipsportal-certbot-nginx
+spec:
+  selector:
+    matchLabels:
+      app: ipsportal-certbot-nginx
+  template:
+    metadata:
+      labels:
+        app: ipsportal-certbot-nginx
+    spec:
+      containers:
+      - name: certbot-nginx
+        image: nginx
+        imagePullPolicy: Always
+        securityContext:
+          capabilities:
+            add:
+            - CHOWN
+            - DAC_OVERRIDE
+            - FOWNER
+            - SETGID
+            - SETUID
+            drop:
+            - ALL
+        volumeMounts:
+        - mountPath: /usr/share/nginx/html
+          name: certbot-html
+      volumes:
+      - name: certbot-html
+        persistentVolumeClaim:
+          claimName: certbot-html
 
 ---
 kind: CronJob
@@ -260,6 +299,34 @@ spec:
   storageClassName: nfs-client
 
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: ipsportal
+  name: certbot-html
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: nfs-client
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: ipsportal
+  name: certbot-certs
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: nfs-client
+
+---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -282,6 +349,10 @@ spec:
           serviceName: me-ingress
           servicePort: 8081
         path: /me
+      - backend:
+          serviceName: certbot-nginx-ingress
+          servicePort: 80
+        path: /.well-known/acme-challenge
 
 ---
 apiVersion: v1
@@ -360,6 +431,24 @@ apiVersion: v1
 kind: Service
 metadata:
   namespace: ipsportal
+  name: certbot-nginx
+  annotations:
+    field.cattle.io/targetWorkloadIds: '["deployment:ipsportal:certbot-nginx"]'
+spec:
+  clusterIP: None
+  clusterIPs:
+    - None
+  ports:
+  - name: default
+    port: 42
+    protocol: TCP
+    targetPort: 42
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: ipsportal
   name: ipsportal-ingress
   annotations:
     field.cattle.io/targetWorkloadIds: '["deployment:ipsportal:ipsportal"]'
@@ -399,3 +488,18 @@ spec:
     port: 8081
     protocol: TCP
     targetPort: 8081
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: ipsportal
+  name: certbot-nginx-ingress
+  annotations:
+    field.cattle.io/targetWorkloadIds: '["deployment:ipsportal:certbot-nginx"]'
+spec:
+  ports:
+  - name: default
+    port: 80
+    protocol: TCP
+    targetPort: 80

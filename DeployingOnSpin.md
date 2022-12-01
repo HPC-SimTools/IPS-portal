@@ -112,7 +112,7 @@ Create the `ipsportal` namespace:
 rancher namespace create ipsportal
 ```
 
-Set up secrets, update `ipsportal.yaml` before running, base64 encode, e.g. `echo -n "password" | base64`
+Set up secrets, update `ipsportal.yaml` before running, base64 encode, e.g. `echo -n "password" | base64`. Update bearer-token from https://rancher2.spin.nersc.gov/apikeys
 
 Deploy:
 
