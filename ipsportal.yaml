@@ -5,7 +5,7 @@ data:
   MONGO_PASSWORD: cGFzc3dvcmQtQ0hBTkdFLU1F
   ME_USERNAME: bW9uZ28=
   ME_PASSWORD: cGFzc3dvcmQ=
-  bearer-token: update
+  bearer-token: dG9rZW4=
 metadata:
   namespace: ipsportal
   name: mongo-secrets
@@ -283,6 +283,61 @@ spec:
               type: Directory
             name: backup
   schedule: 12 3 * * *
+
+---
+kind: CronJob
+apiVersion: batch/v1beta1
+metadata:
+  namespace: ipsportal
+  name: certbot
+  labels:
+    app: ipsportal-certbot
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: certbot
+            command:
+            - /scripts/renew.sh
+            image: openchemistry/certbot-rancher
+            env:
+            - name: CERT_NAME
+              value: letsencrypt
+            - name: CONTEXT
+              value: c-fwj56:p-lbd2g
+            - name: EMAIL
+              value: whitfieldre@ornl.gov
+            - name: DOMAIN
+              value: lb.ipsportal.development.svc.spin.nersc.org
+            - name: ENDPOINT_URL
+              value: https://rancher2.spin.nersc.gov/v3
+            - name: NAMESPACE
+              value: ipsportal
+            securityContext:
+              capabilities:
+                drop:
+                - ALL
+            volumeMounts:
+            - mountPath: /secrets
+              name: secrets
+            - mountPath: /data/letsencrypt
+              name: certbot-html
+            - mountPath: /etc/letsencrypt
+              name: certbot-certs
+          restartPolicy: Never
+          volumes:
+          - name: secrets
+            secret:
+              secretName: mongo-secrets
+          - name: certbot-html
+            persistentVolumeClaim:
+              claimName: certbot-html
+          - name: certbot-certs
+            persistentVolumeClaim:
+              claimName: certbot-certs
+  schedule: 32 1 * * *
 
 ---
 apiVersion: v1

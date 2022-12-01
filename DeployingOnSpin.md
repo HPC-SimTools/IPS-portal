@@ -120,6 +120,8 @@ Deploy:
 rancher kubectl apply -f ipsportal.yaml
 ```
 
+### Backup
+
 To manually trigger a database backup run
 
 ```shell
@@ -146,3 +148,17 @@ rancher kubectl cp mongodb-dump.archive.gz ipsportal/{pod-name}:/tmp
 rancher kubectl exec {pod-name} --namespace=ipsportal -- gunzip /tmp/mongodb-dump.archive.gz
 rancher kubectl exec {pod-name} --namespace=ipsportal -- mongorestore --archive=/tmp/mongodb-dump.archive --authenticationDatabase admin --username mongo --password password-CHANGE-ME
 ```
+
+### TLS
+
+To setup tls certs with letsencrypt make sure bearer-token is correct and `CONTEXT`, `DOMAIN` is correct for prod/dev cluster.
+
+Temporary change command to `/scripts/setup.sh` and run once to do initial setup
+
+```shell
+rancher kubectl --namespace=ipsportal create job --from=cronjob/certbot certbot-setup
+```
+
+Then change the command back to `/scripts/renew.sh`
+
+After go to the Load Balancer and select `letencrypt` certificate.
