@@ -101,7 +101,7 @@ def event() -> Tuple[Response, int]:
         required = {'code', 'eventtype', 'comment', 'walltime', 'phystimestamp', 'portal_runid', 'seqnum'}
         run_keys = {'user', 'host', 'state', 'rcomment', 'tokamak', 'shotno', 'simname', 'startat',
                     'stopat', 'sim_runid', 'outputprefix', 'tag', 'ips_version', 'portal_runid', 'ok', 'walltime',
-                    'parent_portal_runid'}
+                    'parent_portal_runid', 'vizurl'}
 
         if not e.keys() >= required:
             current_app.logger.error(f"Missing required data: {e}")

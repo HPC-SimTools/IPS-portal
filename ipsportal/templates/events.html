@@ -62,6 +62,14 @@
     <td>{{ run.ips_version }}</td>
   </tr>
   <tr>
+    <th>Monitor</th>
+    {% if run.vizurl %}
+    <td><a href=https://{{ run.vizurl }}>monitor<a></td>
+    {% else %}
+    <td></td>
+    {% endif %}
+  </tr>
+  <tr>
     <th>Trace</th>
     {% if run.has_trace %}
     <td><a href="{{ url_for('trace.gettrace', runid=run.runid) }}">trace</a></td>
