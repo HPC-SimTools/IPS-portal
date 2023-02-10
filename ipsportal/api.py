@@ -136,6 +136,8 @@ def event() -> Tuple[Response, int]:
             output['message'] = output['message'] + " and run ended"
         else:
             update["$set"] = {'walltime': e.get('walltime')}
+            if 'vizurl' in e:
+                update["$set"]['vizurl'] = e.get('vizurl')
 
         if trace := e.pop('trace', False):
             update["$push"]["traces"] = trace
