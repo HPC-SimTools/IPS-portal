@@ -68,6 +68,9 @@ $(document).ready( function () {
 		    $(row).addClass('table-danger');
 		}
 	    }
+	    else if (data['state'] ==  'Timeout') {
+		    $(row).addClass('table-warning');
+	    }
         }
     }
 			      );

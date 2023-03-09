@@ -11,10 +11,25 @@ from ipsportal.trace import send_trace
 
 bp = Blueprint('api', __name__)
 
+timeout = 60*60*6
+
 
 @bp.route("/api/runs")
 def runs() -> Tuple[Response, int]:
-    return jsonify(get_runs()), 200
+    runs_list = get_runs()
+
+    current_time = time.time()
+
+    for run in runs_list:
+        if "startat" in run:
+            startat = time.mktime(time.strptime(run['startat'], '%Y-%m-%d|%H:%M:%S%Z'))
+            if run["state"] == "Running" and current_time - startat + float(run['walltime']) > timeout:
+                run["state"] = "Timeout"
+                events = get_events({'portal_runid': run['portal_runid']})
+                if events is not None:
+                    run["stopat"] = events[-1]['time']
+
+    return jsonify(runs_list), 200
 
 
 @bp.route("/api/run/<string:portal_runid>/children")
