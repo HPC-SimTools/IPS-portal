@@ -33,14 +33,18 @@ def init_app(app: Flask) -> None:
 db: LocalProxy = LocalProxy(get_db)
 
 
-def get_runs() -> List[Dict[str, Any]]:
+def get_runs(last_event: bool = False) -> List[Dict[str, Any]]:
     return list(db.runs.find(filter={'parent_portal_runid': None},
-                             projection={'_id': False, 'events': False, 'traces': False}))
+                             projection={'_id': False,
+                                         'events': {'$slice': -1} if last_event else False,
+                                         'traces': False}))
 
 
-def get_child_runs(filter: Dict[str, Any]) -> List[Dict[str, Any]]:
+def get_child_runs(filter: Dict[str, Any], last_event: bool = False) -> List[Dict[str, Any]]:
     return list(db.runs.find(filter,
-                             projection={'_id': False, 'events': False, 'traces': False}))
+                             projection={'_id': False,
+                                         'events': {'$slice': -1} if last_event else False,
+                                         'traces': False}))
 
 
 def get_events(filter: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
@@ -52,7 +56,7 @@ def get_events(filter: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
 
 def get_run(filter: Dict[str, Any]) -> Dict[str, Any]:
     return db.runs.find_one(filter,  # type: ignore[no-any-return]
-                            projection={'_id': False, 'events': False, 'traces': False})
+                            projection={'_id': False, 'events': {'$slice': -1}, 'traces': False})
 
 
 def get_trace(filter: Dict[str, Any]) -> List[Dict[str, Any]]:
