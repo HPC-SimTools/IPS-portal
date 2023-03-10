@@ -14,7 +14,16 @@ bp = Blueprint('api', __name__)
 
 @bp.route("/api/runs")
 def runs() -> Tuple[Response, int]:
-    return jsonify(get_runs()), 200
+    t = time.time()
+    run_list = get_runs()
+    for run in run_list:
+        last_modified = run.get("last_modified", 0)
+        if run['state'] == "Running" and t - last_modified > 7200:
+            run['state'] = "Timeout"
+            if last_modified:
+                run["stopat"] = time.strftime('%Y-%m-%d|%H:%M:%S%Z', time.localtime(last_modified))
+
+    return jsonify(run_list), 200
 
 
 @bp.route("/api/run/<string:portal_runid>/children")
@@ -22,9 +31,19 @@ def child_runs(portal_runid: str) -> Tuple[Response, int]:
     return jsonify(get_child_runs(filter={'parent_portal_runid': portal_runid})), 200
 
 
+
 @bp.route("/api/run/<int:runid>/children")
 def child_runs_runid(runid: int) -> Tuple[Response, int]:
-    return jsonify(get_child_runs(filter={'parent_portal_runid': get_portal_runid(runid)})), 200
+    t = time.time()
+    run_list = get_child_runs(filter={'parent_portal_runid': get_portal_runid(runid)})
+    for run in run_list:
+        last_modified = run.get("last_modified", 0)
+        if run['state'] == "Running" and t - last_modified > 7200:
+            run['state'] = "Timeout"
+            if last_modified:
+                run["stopat"] = time.strftime('%Y-%m-%d|%H:%M:%S%Z', time.localtime(last_modified))
+
+    return jsonify(run_list), 200
 
 
 @bp.route("/api/run/<int:runid>/events")
@@ -117,6 +136,7 @@ def event() -> Tuple[Response, int]:
             run_dict['events'] = [e]
             run_dict['traces'] = []
             run_dict['has_trace'] = False
+            run_dict['last_modified'] = time.time()
             try:
                 add_run(run_dict)
             except pymongo.errors.DuplicateKeyError:
@@ -132,10 +152,12 @@ def event() -> Tuple[Response, int]:
 
         if e.get('eventtype') == "IPS_END":
             run_dict = {key: e[key] for key in run_keys if key in e}
+            run_dict['last_modified'] = time.time()
             update["$set"] = run_dict
             output['message'] = output['message'] + " and run ended"
         else:
-            update["$set"] = {'walltime': e.get('walltime')}
+            update["$set"] = {'walltime': e.get('walltime'),
+                              'last_modified': time.time()}
             if 'vizurl' in e:
                 update["$set"]['vizurl'] = e.get('vizurl')
 
