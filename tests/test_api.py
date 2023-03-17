@@ -35,7 +35,7 @@ def test_post_events(client):
     response = client.get(f"/api/run/{runid}")
     assert response.status_code == 200
     assert response.json['portal_runid'] == start_event['portal_runid']
-    assert response.json['state'] == start_event['state']
+    assert response.json['state'] == "Timeout"
     assert response.json['startat'] == start_event['startat']
     assert response.json['rcomment'] == start_event['rcomment']
     assert response.json['runid'] == runid
@@ -45,7 +45,7 @@ def test_post_events(client):
     response = client.get(f"/api/run/{portal_runid}")
     assert response.status_code == 200
     assert response.json['portal_runid'] == start_event['portal_runid']
-    assert response.json['state'] == start_event['state']
+    assert response.json['state'] == "Timeout"
     assert response.json['startat'] == start_event['startat']
     assert response.json['rcomment'] == start_event['rcomment']
     assert response.json['runid'] == runid

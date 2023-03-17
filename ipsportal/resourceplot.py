@@ -21,6 +21,8 @@ def resource_plot(runid: int) -> Tuple[str, int]:
         return f"Unable to plot because missing {e} information", 500
 
     run = get_run({"runid": runid})
+    if run is None:
+        return "Missing run", 404
 
     tasks = []
     task_set = set()

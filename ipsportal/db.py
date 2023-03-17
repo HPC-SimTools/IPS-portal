@@ -84,9 +84,11 @@ def get_events(filter: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
     return runs['events']  # type: ignore[no-any-return]
 
 
-def get_run(filter: Dict[str, Any]) -> Dict[str, Any]:
-    return db.runs.find_one(filter,  # type: ignore[no-any-return]
-                            projection={'_id': False, 'events': False, 'traces': False})
+def get_run(filter: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    runs = get_runs(filter)
+    if runs:
+        return runs[0]
+    return None
 
 
 def get_trace(filter: Dict[str, Any]) -> List[Dict[str, Any]]:
