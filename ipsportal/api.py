@@ -5,7 +5,7 @@ import pymongo
 import requests
 import hashlib
 from ipsportal.db import (get_runs, get_events, get_run, next_runid,
-                          get_trace, add_run, update_run, get_child_runs, get_portal_runid,
+                          get_trace, add_run, update_run, get_portal_runid,
                           get_parent_portal_runid)
 from ipsportal.trace import send_trace
 
@@ -14,17 +14,17 @@ bp = Blueprint('api', __name__)
 
 @bp.route("/api/runs")
 def runs() -> Tuple[Response, int]:
-    return jsonify(get_runs()), 200
+    return jsonify(get_runs(filter={'parent_portal_runid': None})), 200
 
 
 @bp.route("/api/run/<string:portal_runid>/children")
 def child_runs(portal_runid: str) -> Tuple[Response, int]:
-    return jsonify(get_child_runs(filter={'parent_portal_runid': portal_runid})), 200
+    return jsonify(get_runs(filter={'parent_portal_runid': portal_runid})), 200
 
 
 @bp.route("/api/run/<int:runid>/children")
 def child_runs_runid(runid: int) -> Tuple[Response, int]:
-    return jsonify(get_child_runs(filter={'parent_portal_runid': get_portal_runid(runid)})), 200
+    return jsonify(get_runs(filter={'parent_portal_runid': get_portal_runid(runid)})), 200
 
 
 @bp.route("/api/run/<int:runid>/events")
@@ -129,6 +129,9 @@ def event() -> Tuple[Response, int]:
             continue
 
         update: Dict[str, Any] = {"$push": {"events": e}}
+        update["$currentDate"] = {
+            "lastModified": True,
+        }
 
         if e.get('eventtype') == "IPS_END":
             run_dict = {key: e[key] for key in run_keys if key in e}

@@ -33,14 +33,48 @@ def init_app(app: Flask) -> None:
 db: LocalProxy = LocalProxy(get_db)
 
 
-def get_runs() -> List[Dict[str, Any]]:
-    return list(db.runs.find(filter={'parent_portal_runid': None},
-                             projection={'_id': False, 'events': False, 'traces': False}))
-
-
-def get_child_runs(filter: Dict[str, Any]) -> List[Dict[str, Any]]:
-    return list(db.runs.find(filter,
-                             projection={'_id': False, 'events': False, 'traces': False}))
+def get_runs(filter: Dict[str, Any]) -> List[Dict[str, Any]]:
+    return list(db.runs.aggregate(
+        [
+            {"$match": filter},
+            {"$addFields": {
+                "timeout": {"$cond":
+                            [
+                                {"$and": [{"$eq": ["$state", "Running"]},
+                                          {"$or": [
+                                              {"$not": "$lastModified"},
+                                              {"$gte": [{"$dateDiff":
+                                                         {"startDate": "$lastModified",
+                                                          "endDate": "$$NOW",
+                                                          "unit": "hour"}}, 3]}
+                                          ]}]},
+                                True, False]}
+            }
+             },
+            {"$project": {
+                "_id": False,
+                "has_trace": True,
+                "host": True,
+                "ips_version": True,
+                "lastModified": True,
+                "ok": True,
+                "parent_portal_runid": True,
+                "portal_runid": True,
+                "rcomment": True,
+                "runid": True,
+                "shotno": True,
+                "sim_runid": True,
+                "simname": True,
+                "startat": True,
+                "state": {"$cond": ["$timeout", "Timeout", "$state"]},
+                "stopat": {"$cond": ["$timeout", {"$last": "$events.time"}, "$stopat"]},
+                "tag": True,
+                "tokamak": True,
+                "user": True,
+                "walltime": True,
+                "vizurl": True
+            }}
+        ]))
 
 
 def get_events(filter: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
