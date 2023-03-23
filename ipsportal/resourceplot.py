@@ -1,6 +1,6 @@
 from typing import Tuple, Dict, Any
 import plotly.graph_objects as go
-from flask import Blueprint, url_for
+from flask import Blueprint, url_for, current_app
 from ipsportal.db import get_trace, get_run
 
 bp = Blueprint('resourceplot', __name__)
@@ -18,7 +18,8 @@ def resource_plot(runid: int) -> Tuple[str, int]:
         time_start = float(traces[-1]['timestamp'])/1e6
         duration = float(traces[-1]['duration'])/1e6
     except KeyError as e:
-        return f"Unable to plot because missing {e} information", 500
+        current_app.logger.error(f"Unable to plot because missing {e} information")
+        return "Unable to plot because missing information", 500
 
     run = get_run({"runid": runid})
     if run is None:
@@ -63,7 +64,8 @@ def resource_plot(runid: int) -> Tuple[str, int]:
                     task_plots[task].append(0.)
                     task_plots[task].append(0.)
     except KeyError as e:
-        return f"Unable to plot because missing {e} information", 500
+        current_app.logger.error(f"Unable to plot because missing {e} information")
+        return "Unable to plot because missing information", 500
 
     plot = go.Figure()
     for task in task_set:
