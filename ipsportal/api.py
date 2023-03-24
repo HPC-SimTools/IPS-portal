@@ -179,3 +179,9 @@ def event() -> Tuple[Response, int]:
         return jsonify(**output, errors=errors), 400
 
     return jsonify(**output), 200
+
+
+@bp.route("/api/version")
+def version() -> Tuple[Response, int]:
+    from importlib.metadata import version
+    return jsonify(version=version("ipsportal")), 200
