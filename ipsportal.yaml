@@ -393,21 +393,23 @@ spec:
     http:
       paths:
       - backend:
-          serviceName: ipsportal-ingress
+          serviceName: ipsportal
           servicePort: 8080
         path: /
       - backend:
-          serviceName: jaeger-ingress
+          serviceName: jaeger
           servicePort: 16686
         path: /jaeger
       - backend:
-          serviceName: me-ingress
+          serviceName: me
           servicePort: 8081
         path: /me
       - backend:
-          serviceName: certbot-nginx-ingress
+          serviceName: certbot-nginx
           servicePort: 80
         path: /.well-known/acme-challenge
+  tls:
+    - secretName: letsencrypt
 
 ---
 apiVersion: v1
@@ -416,52 +418,15 @@ metadata:
   namespace: ipsportal
   name: db
   annotations:
-    field.cattle.io/targetWorkloadIds: '["deployment:ipsportal:db"]'
+    field.cattle.io/targetWorkloadIds: '["ipsportal/db"]'
 spec:
-  clusterIP: None
-  clusterIPs:
-    - None
   ports:
   - name: default
-    port: 42
+    port: 27017
     protocol: TCP
-    targetPort: 42
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  namespace: ipsportal
-  name: jaeger
-  annotations:
-    field.cattle.io/targetWorkloadIds: '["deployment:ipsportal:jaeger"]'
-spec:
-  clusterIP: None
-  clusterIPs:
-    - None
-  ports:
-  - name: default
-    port: 42
-    protocol: TCP
-    targetPort: 42
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  namespace: ipsportal
-  name: me
-  annotations:
-    field.cattle.io/targetWorkloadIds: '["deployment:ipsportal:me"]'
-spec:
-  clusterIP: None
-  clusterIPs:
-    - None
-  ports:
-  - name: default
-    port: 42
-    protocol: TCP
-    targetPort: 42
+    targetPort: 27017
+  selector:
+    app: ipsportal-db
 
 ---
 apiVersion: v1
@@ -470,16 +435,53 @@ metadata:
   namespace: ipsportal
   name: ipsportal
   annotations:
-    field.cattle.io/targetWorkloadIds: '["deployment:ipsportal:ipsportal"]'
+    field.cattle.io/targetWorkloadIds: '["ipsportal/ipsportal"]'
 spec:
-  clusterIP: None
-  clusterIPs:
-    - None
   ports:
   - name: default
-    port: 42
+    port: 8080
     protocol: TCP
-    targetPort: 42
+    targetPort: 8080
+  selector:
+    app: ipsportal-ipsportal
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: ipsportal
+  name: jaeger
+  annotations:
+    field.cattle.io/targetWorkloadIds: '["ipsportal/jaeger"]'
+spec:
+  ports:
+  - name: default
+    port: 16686
+    protocol: TCP
+    targetPort: 16686
+  - name: zipkin
+    port: 9411
+    protocol: TCP
+    targetPort: 9411
+  selector:
+    app: ipsportal-jaeger
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: ipsportal
+  name: me
+  annotations:
+    field.cattle.io/targetWorkloadIds: '["ipsportal/me"]'
+spec:
+  ports:
+  - name: default
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
+  selector:
+    app: ipsportal-me
 
 ---
 apiVersion: v1
@@ -488,73 +490,12 @@ metadata:
   namespace: ipsportal
   name: certbot-nginx
   annotations:
-    field.cattle.io/targetWorkloadIds: '["deployment:ipsportal:certbot-nginx"]'
-spec:
-  clusterIP: None
-  clusterIPs:
-    - None
-  ports:
-  - name: default
-    port: 42
-    protocol: TCP
-    targetPort: 42
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  namespace: ipsportal
-  name: ipsportal-ingress
-  annotations:
-    field.cattle.io/targetWorkloadIds: '["deployment:ipsportal:ipsportal"]'
-spec:
-  ports:
-  - name: default
-    port: 8080
-    protocol: TCP
-    targetPort: 8080
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  namespace: ipsportal
-  name: jaeger-ingress
-  annotations:
-    field.cattle.io/targetWorkloadIds: '["deployment:ipsportal:jaeger"]'
-spec:
-  ports:
-  - name: default
-    port: 16686
-    protocol: TCP
-    targetPort: 16686
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  namespace: ipsportal
-  name: me-ingress
-  annotations:
-    field.cattle.io/targetWorkloadIds: '["deployment:ipsportal:me"]'
-spec:
-  ports:
-  - name: default
-    port: 8081
-    protocol: TCP
-    targetPort: 8081
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  namespace: ipsportal
-  name: certbot-nginx-ingress
-  annotations:
-    field.cattle.io/targetWorkloadIds: '["deployment:ipsportal:certbot-nginx"]'
+    field.cattle.io/targetWorkloadIds: '["ipsportal/certbot-nginx"]'
 spec:
   ports:
   - name: default
     port: 80
     protocol: TCP
     targetPort: 80
+  selector:
+    app: ipsportal-certbot-nginx
