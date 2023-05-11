@@ -26,10 +26,11 @@ def create_app(test_config: Optional[Mapping[str, Any]] = None) -> Flask:
     from . import db
     db.init_app(app)
 
-    from ipsportal import run, resourceplot, trace, api
+    from ipsportal import run, resourceplot, trace, api, data_api
     app.register_blueprint(run.bp)
     app.register_blueprint(resourceplot.bp)
     app.register_blueprint(trace.bp)
     app.register_blueprint(api.bp)
+    app.register_blueprint(data_api.bp)
 
     return app
