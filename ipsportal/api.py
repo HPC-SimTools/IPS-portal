@@ -1,30 +1,75 @@
 import time
+from json import JSONDecodeError
 from typing import Tuple, Dict, Any, Optional, List, Union
-from flask import Blueprint, jsonify, request, Response, current_app
+from flask import Blueprint, json, jsonify, request, Response, current_app
+import logging
 import pymongo
+import pymongo.errors
 import requests
 import hashlib
-from ipsportal.db import (get_runs, get_events, get_run, next_runid,
-                          get_trace, add_run, update_run, get_portal_runid,
-                          get_parent_portal_runid)
+from ipsportal.datatables import get_datatables_results
+from ipsportal.db import (
+    get_runs,
+    get_runs_total,
+    get_events,
+    get_run,
+    next_runid,
+    get_trace,
+    add_run,
+    update_run,
+    get_portal_runid,
+    get_parent_portal_runid,
+)
 from ipsportal.trace import send_trace
+from ipsportal.util import ALLOWED_PROPS_RUN
+
+logger = logging.getLogger(__name__)
 
 bp = Blueprint('api', __name__)
 
 
+@bp.route("/api/runs-datatables")
+def runs_datatables() -> Tuple[Response, int]:
+    try:
+        arguments: Dict[str, Any] = json.loads(request.args.get('data', '{}'))
+    except JSONDecodeError:
+        return jsonify(('data', '"data" query parameter must be JSON-parseable')), 400
+
+    try:
+        datatables_ok, datatables_value = get_datatables_results(
+            arguments,
+            allowed_props=ALLOWED_PROPS_RUN,
+            data_query_fn=get_runs,
+            count_query_fn=get_runs_total,
+            base_filter={"parent_portal_runid": None},
+        )
+    except pymongo.errors.PyMongoError as e:
+        logger.error('Pymongo error', e)
+        return jsonify('Interal Service Error'), 500
+    if not datatables_ok:
+        logger.warning('DataTables value invalid', datatables_value)
+        return jsonify(datatables_value), 400
+    return jsonify(datatables_value), 200
+
+
+# TODO - legacy, consider removing once tests are reworked.
 @bp.route("/api/runs")
 def runs() -> Tuple[Response, int]:
-    return jsonify(get_runs(filter={'parent_portal_runid': None})), 200
+    try:
+        return jsonify(get_runs(db_filter={'parent_portal_runid': None}, limit=100)), 200
+    except pymongo.errors.PyMongoError as e:
+        logger.error('Pymongo error', e)
+        return jsonify('Interal Service Error'), 500
 
 
 @bp.route("/api/run/<string:portal_runid>/children")
 def child_runs(portal_runid: str) -> Tuple[Response, int]:
-    return jsonify(get_runs(filter={'parent_portal_runid': portal_runid})), 200
+    return jsonify(get_runs(db_filter={'parent_portal_runid': portal_runid})), 200
 
 
 @bp.route("/api/run/<int:runid>/children")
 def child_runs_runid(runid: int) -> Tuple[Response, int]:
-    return jsonify(get_runs(filter={'parent_portal_runid': get_portal_runid(runid)})), 200
+    return jsonify(get_runs(db_filter={'parent_portal_runid': get_portal_runid(runid)})), 200
 
 
 @bp.route("/api/run/<int:runid>/events")
@@ -81,7 +126,7 @@ def trace(portal_runid: str) -> Tuple[Response, int]:
 @bp.route("/", methods=['POST'])
 @bp.route("/api/event", methods=['POST'])
 def event() -> Tuple[Response, int]:
-    event_list: Optional[Union[List[Dict[str, Any]], Dict[str, Any]]] = request.get_json()  # type: ignore[attr-defined]
+    event_list: Optional[Union[List[Dict[str, Any]], Dict[str, Any]]] = request.get_json()
 
     if event_list is None:
         current_app.logger.error("Missing data")
