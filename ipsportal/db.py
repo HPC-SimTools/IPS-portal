@@ -1,13 +1,15 @@
 from typing import List, Dict, Any, Optional
 from pymongo import MongoClient, ASCENDING, DESCENDING
+from pymongo.database import Database
 from werkzeug.local import LocalProxy
 from flask import g, Flask
 import os
 
 
-def get_db() -> Any:
+def get_db() -> Database[Dict[str, Any]]:
     if 'db' not in g:
-        client = MongoClient(host=os.environ.get('MONGO_HOST', 'localhost'),
+        client: MongoClient[Dict[str, Any]] = MongoClient(
+                             host=os.environ.get('MONGO_HOST', 'localhost'),
                              port=int(os.environ.get('MONGO_PORT', 27017)),
                              username=os.environ.get('MONGO_USERNAME'),
                              password=os.environ.get('MONGO_PASSWORD'))
@@ -15,7 +17,7 @@ def get_db() -> Any:
         client.portal.runs.create_index([('portal_runid', ASCENDING)], unique=True)
         g.db = client.portal
 
-    return g.db
+    return g.db  # type: ignore[no-any-return]
 
 
 def close_db(e: Optional[BaseException] = None) -> None:
@@ -30,13 +32,21 @@ def init_app(app: Flask) -> None:
 
 
 # Use LocalProxy to read the global db instance with just `db`
-db: LocalProxy = LocalProxy(get_db)
+db: Database[Dict[str, Any]] = LocalProxy(get_db)  # type: ignore[assignment]
 
 
-def get_runs(filter: Dict[str, Any]) -> List[Dict[str, Any]]:
-    return list(db.runs.aggregate(
-        [
-            {"$match": filter},
+def get_runs_total(db_filter: Dict[str, Any]) -> int:
+    return db.runs.count_documents(db_filter)
+
+
+def get_runs(
+        db_filter: Dict[str, Any],
+        skip: Optional[int] = None,
+        limit: Optional[int] = None,
+        sort: Optional[Dict[str, int]] = None,
+) -> List[Dict[str, Any]]:
+    aggregation_pipeline: List[Dict[str, Any]] = [
+            {"$match": db_filter},
             {"$addFields": {
                 "timeout": {"$cond":
                             [
@@ -74,25 +84,34 @@ def get_runs(filter: Dict[str, Any]) -> List[Dict[str, Any]]:
                 "walltime": True,
                 "vizurl": True
             }}
-        ]))
+        ]
+    if sort:
+        aggregation_pipeline.append({'$sort': sort})
+    if skip:
+        aggregation_pipeline.append({'$skip': skip})
+    if limit:
+        aggregation_pipeline.append({'$limit': limit})
+
+    # if the query is taking longer than 30 seconds (probably already too long), kill it to prevent a DDOS
+    return list(db.runs.aggregate(aggregation_pipeline, maxTimeMS=30_000))
 
 
-def get_events(filter: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
-    runs = db.runs.find_one(filter, projection={'_id': False, 'events': True})
+def get_events(db_filter: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
+    runs = db.runs.find_one(db_filter, projection={'_id': False, 'events': True})
     if runs is None:
         return None
     return runs['events']  # type: ignore[no-any-return]
 
 
-def get_run(filter: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    runs = get_runs(filter)
+def get_run(db_filter: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    runs = get_runs(db_filter, limit=1)
     if runs:
         return runs[0]
     return None
 
 
-def get_trace(filter: Dict[str, Any]) -> List[Dict[str, Any]]:
-    runs = db.runs.find(filter,
+def get_trace(db_filter: Dict[str, Any]) -> List[Dict[str, Any]]:
+    runs = db.runs.find(filter=db_filter,
                         projection={'_id': False, 'portal_runid': True, 'traces': True})
     traces = []
     for run in runs:
@@ -112,23 +131,38 @@ def add_run(run: Dict[str, Any]) -> Any:
     return db.runs.insert_one(run)
 
 
-def update_run(filter: Dict[str, Any], update: Dict[str, Any]) -> Any:
-    return db.runs.update_one(filter, update)
+def update_run(db_filter: Dict[str, Any], update: Dict[str, Any]) -> Any:
+    return db.runs.update_one(db_filter, update)
 
 
 def get_runid(portal_runid: str) -> Any:
-    return db.runs.find_one(filter={'portal_runid': portal_runid},
-                            projection={'runid': True, '_id': False}).get('runid')
+    result = db.runs.find_one(
+        filter={'portal_runid': portal_runid},
+        projection={'runid': True, '_id': False}
+    )
+    if result:
+        return result.get('runid')
+    return None
 
 
 def get_portal_runid(runid: int) -> Any:
-    return db.runs.find_one(filter={'runid': runid},
-                            projection={'portal_runid': True, '_id': False}).get('portal_runid')
+    result = db.runs.find_one(
+        filter={'runid': runid},
+        projection={'portal_runid': True, '_id': False}
+    )
+    if result:
+        return result.get('portal_runid')
+    return None
 
 
 def get_parent_portal_runid(portal_runid: str) -> Any:
-    return db.runs.find_one(filter={'portal_runid': portal_runid},
-                            projection={'parent_portal_runid': True, '_id': False}).get('parent_portal_runid')
+    result = db.runs.find_one(
+        filter={'portal_runid': portal_runid},
+        projection={'parent_portal_runid': True, '_id': False}
+    )
+    if result:
+        return result.get('parent_portal_runid')
+    return None
 
 
 def next_runid() -> int:
