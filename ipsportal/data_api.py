@@ -146,7 +146,7 @@ def query() -> Tuple[Response, int]:
             sorted(
                 x["portal_runid"]
                 for x in db.data.find(
-                    request.get_json(), projection={"_id": False, "portal_runid": True}  # type: ignore
+                    request.get_json(), projection={"_id": False, "portal_runid": True}
                 )
             )
         ),
