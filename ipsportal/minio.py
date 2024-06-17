@@ -17,6 +17,8 @@ MINIO_PRIVATE_URL = os.environ.get("MINIO_PRIVATE_URL", "http://localhost:9000")
 This is the URL the backend uses. It must NOT contain a path in the URI.
 """
 MINIO_URI = parse_url(MINIO_PRIVATE_URL)
+if not MINIO_URI.host:
+    raise RuntimeError(f'MINIO_PRIVATE_URL: Cannot parse host of {MINIO_PRIVATE_URL} (did you include the scheme?)')
 MINIO_PUBLIC_URL = os.environ.get("MINIO_PUBLIC_URL", MINIO_PRIVATE_URL)
 """
 This is the URL we expose directly to end users. Paths are allowed here.

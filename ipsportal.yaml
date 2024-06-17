@@ -169,7 +169,7 @@ spec:
         - name: MINIO_PUBLIC_URL
           value: https://lb.ipsportal.development.svc.spin.nersc.org/files
         - name: MINIO_PRIVATE_URL
-          value: "minio:9000"
+          value: "http://minio:9000"
         - name: TZ
           value: America/Los_Angeles
         securityContext:
