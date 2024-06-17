@@ -1,6 +1,6 @@
 from typing import Tuple
 from flask import Blueprint, render_template
-from ipsportal.db import get_run, get_runid
+from ipsportal.db import get_run, get_runid, get_data_tags
 
 bp = Blueprint('index', __name__)
 
@@ -20,4 +20,5 @@ def run(runid: int) -> Tuple[str, int]:
         run['parent_runid'] = get_runid(str(run.get('parent_portal_runid')))
     else:
         run['parent_runid'] = None
-    return render_template("events.html", run=run), 200
+    data_info = get_data_tags(run['portal_runid'])
+    return render_template("events.html", run=run, data_info=data_info), 200

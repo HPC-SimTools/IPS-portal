@@ -15,6 +15,8 @@ def get_db() -> Database[Dict[str, Any]]:
                              password=os.environ.get('MONGO_PASSWORD'))
         client.portal.runs.create_index([('runid', DESCENDING)], unique=True)
         client.portal.runs.create_index([('portal_runid', ASCENDING)], unique=True)
+        client.portal.data.create_index([('runid', DESCENDING)], unique=True)
+        client.portal.data.create_index([('portal_runid', ASCENDING)], unique=True)
         g.db = client.portal
 
     return g.db  # type: ignore[no-any-return]
@@ -167,3 +169,12 @@ def get_parent_portal_runid(portal_runid: str) -> Any:
 
 def next_runid() -> int:
     return int(db.runid.find_one_and_update({}, {"$inc": {"runid": 1}}, upsert=True, new=True).get('runid', 0))
+
+
+def get_data_tags(portal_runid: str) -> Optional[dict[str, Any]]:
+    result = db.data.find_one(
+        {"portal_runid": portal_runid}, projection={"_id": False, "tags": True}
+    )
+    if result:
+        return result.get('tags')
+    return None

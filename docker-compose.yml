@@ -10,9 +10,12 @@ services:
     restart: unless-stopped
     environment:
       MONGO_HOST: db
+      MINIO_PRIVATE_URL: http://minio:9000
+      MINIO_PUBLIC_URL: http://localhost/files
       JAEGER_HOST: jaeger
     depends_on:
      - db
+     - minio
 
   jaeger:
     image: jaegertracing/all-in-one:1.38
@@ -38,3 +41,12 @@ services:
       ME_CONFIG_MONGODB_SERVER: db
     depends_on:
      - db
+  
+  minio:
+    image: "bitnami/minio:2024.6.4"
+    environment:
+      # references: https://github.com/bitnami/containers/blob/main/bitnami/minio/README.md
+      MINIO_ROOT_USER: AKIAIOSFODNN7EXAMPLE
+      MINIO_ROOT_PASSWORD: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+    #volumes:
+      #- "./tmp/minio:/bitnami/minio/data"

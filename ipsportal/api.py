@@ -45,7 +45,7 @@ def runs_datatables() -> Tuple[Response, int]:
         )
     except pymongo.errors.PyMongoError as e:
         logger.error('Pymongo error', e)
-        return jsonify('Interal Service Error'), 500
+        return jsonify('Internal Service Error'), 500
     if not datatables_ok:
         logger.warning('DataTables value invalid', datatables_value)
         return jsonify(datatables_value), 400
@@ -126,7 +126,7 @@ def trace(portal_runid: str) -> Tuple[Response, int]:
 @bp.route("/", methods=['POST'])
 @bp.route("/api/event", methods=['POST'])
 def event() -> Tuple[Response, int]:
-    event_list: Optional[Union[List[Dict[str, Any]], Dict[str, Any]]] = request.get_json()
+    event_list: Optional[Union[List[Dict[str, Any]], Dict[str, Any]]] = request.get_json()  # type: ignore
 
     if event_list is None:
         current_app.logger.error("Missing data")

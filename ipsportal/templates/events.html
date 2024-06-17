@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 
 {% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='events.css') }}" />
 <script src="{{ url_for('static', filename='event-table.js') }}" defer></script>
 <script src="{{ url_for('static', filename='child-runs-table.js') }}" defer></script>
 {% endblock %}
@@ -102,6 +103,43 @@
   </tbody>
 </table>
 
+{% if data_info is not none %}
+<details>
+  <summary>Raw Data Files</summary>
+  <ol>
+  {% for item in data_info %}
+  <li><a class="raw-data-uri" href="{{item.data_location_url}}" download="{{run.portal_runid}}__{{item.tag}}">{{item.tag}}</a></li>
+  {% endfor %}
+  </ol>
+</details>
+
+<details>
+  <summary>Data File bulk download script</summary>
+  <p>This is a basic Python script you can run to quickly download all data files. Note that the files will be written to the script's execution directory.</p>
+  <pre><code class="language-python">
+from concurrent.futures import ThreadPoolExecutor
+import requests
+import sys
+
+DATA_FILE_URLS = [{% for item in data_info %}'{{item.data_location_url}}',{% endfor %}]
+
+def download_file(url):
+  response = requests.get(url)
+  if "content-disposition" in response.headers:
+    content_disposition = response.headers["content-disposition"]
+    filename = content_disposition.split("filename=")[1]
+  else:
+    filename = url.split("/")[-1]
+  with open(filename, mode="wb") as file:
+    file.write(response.content)
+  print(f"Downloaded file {filename}", file=sys.stderr)
+
+with ThreadPoolExecutor() as executor:
+  executor.map(download_file, DATA_FILE_URLS)
+
+  </code></pre>
+</details>
+{% endif %}
 
 <nav>
   <div class="nav nav-tabs" id="nav-tab" role="tablist">

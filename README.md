@@ -30,10 +30,18 @@ flask run
 
 Go to http://localhost:5000
 
-### Requires mongo
+### Requirements:
+
+1) Mongo (stores IPS events and all metadata)
 
 ```shell
 docker run --rm -p 27017:27017 -v /tmp/db:/data/db mongo:6
+```
+
+2) MinIO (stores raw data, has a web GUI on port 9001, use variables below as credentials)
+
+```shell
+docker run --rm -p 9000:9000 -p 9001:9001 -e MINIO_ROOT_USER=AKIAIOSFODNN7EXAMPLE -e MINIO_ROOT_PASSWORD=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY bitnami/minio:2024.6.4
 ```
 
 ### For profile tracing
