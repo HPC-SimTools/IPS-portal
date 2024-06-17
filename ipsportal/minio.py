@@ -30,7 +30,7 @@ MINIO_CLIENT = Minio(
     secret_key=os.environ.get(
         "MINIO_ROOT_PASSWORD", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
     ),
-    endpoint=(MINIO_URI.host if not MINIO_URI.port else f'{MINIO_URI.host}:{MINIO_URI.port}'),  # type: ignore
+    endpoint=(MINIO_URI.host if not MINIO_URI.port else f'{MINIO_URI.host}:{MINIO_URI.port}'),
 )
 
 

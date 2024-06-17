@@ -273,7 +273,7 @@ spec:
 
 ---
 kind: CronJob
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 metadata:
   namespace: ipsportal
   name: mongodb-dump
@@ -324,7 +324,7 @@ spec:
 
 ---
 kind: CronJob
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 metadata:
   namespace: ipsportal
   name: certbot
