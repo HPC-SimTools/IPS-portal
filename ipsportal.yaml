@@ -154,7 +154,8 @@ spec:
     spec:
       containers:
       - name: ipsportal
-        image: ghcr.io/hpc-simtools/ips-portal/ipsportal:latest
+        # use "latest" tag for production instance
+        image: ghcr.io/hpc-simtools/ips-portal/ipsportal:dev
         imagePullPolicy: Always
         envFrom:
         - secretRef:
