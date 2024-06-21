@@ -74,6 +74,11 @@ spec:
       containers:
       - name: minio
         image: "bitnami/minio:2024.6.4"
+        env:
+        - name: MINIO_SERVER_URL
+          value: "https://data.ipsportal.development.svc.spin.nersc.org/"
+        - name: MINIO_BROWSER_REDIRECT_URL
+          value: "https://data.ipsportal.development.svc.spin.nersc.org/console/"
         envFrom:
         - secretRef:
             name: minio-secrets
@@ -167,10 +172,8 @@ spec:
           value: jaeger
         - name: MONGO_HOST
           value: db
-        - name: MINIO_PUBLIC_URL
-          value: https://lb.ipsportal.development.svc.spin.nersc.org/files
         - name: MINIO_PRIVATE_URL
-          value: "http://minio:9000"
+          value: https://data.ipsportal.development.svc.spin.nersc.org
         - name: TZ
           value: America/Los_Angeles
         securityContext:
@@ -454,13 +457,6 @@ spec:
         pathType: Prefix
       - backend:
           service:
-            name: minio
-            port: 
-              number: 9000
-        path: /files
-        pathType: Prefix
-      - backend:
-          service:
             name: jaeger
             port:
               number: 16686
@@ -592,3 +588,179 @@ spec:
     targetPort: 80
   selector:
     app: ipsportal-certbot-nginx
+
+---
+#################### begin data ingress config ##################
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: ipsportal
+  name: data
+spec:
+  rules:
+  - host: data.ipsportal.development.svc.spin.nersc.org
+    http:
+      paths:
+      - backend:
+          service:
+            name: minio
+            port: 
+              number: 9000
+        path: /
+        pathType: Prefix
+      - backend:
+          service:
+            name: minio
+            port: 
+              number: 9001
+        path: /console/
+        pathType: Prefix
+      - backend:
+          service:
+            name: certbot-nginx-data
+            port:
+              number: 80
+        path: /.well-known/acme-challenge
+        pathType: Prefix
+  tls:
+    - secretName: letsencrypt-data
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  namespace: ipsportal
+  name: certbot-nginx-data
+  labels:
+    app: ipsportal-certbot-nginx-data
+spec:
+  selector:
+    matchLabels:
+      app: ipsportal-certbot-nginx-data
+  template:
+    metadata:
+      labels:
+        app: ipsportal-certbot-nginx-data
+    spec:
+      containers:
+      - name: certbot-nginx-data
+        image: nginx
+        imagePullPolicy: Always
+        securityContext:
+          capabilities:
+            add:
+            - CHOWN
+            - DAC_OVERRIDE
+            - FOWNER
+            - SETGID
+            - SETUID
+            drop:
+            - ALL
+        volumeMounts:
+        - mountPath: /usr/share/nginx/html
+          name: certbot-html
+      volumes:
+      - name: certbot-html
+        persistentVolumeClaim:
+          claimName: certbot-html-data
+
+---
+kind: CronJob
+apiVersion: batch/v1
+metadata:
+  namespace: ipsportal
+  name: certbot-data
+  labels:
+    app: ipsportal-certbot-data
+spec:
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: certbot-data
+            command:
+            - /scripts/renew.sh
+            image: openchemistry/certbot-rancher
+            env:
+            - name: CERT_NAME
+              value: letsencrypt-data
+            - name: CONTEXT
+              value: c-fwj56:p-lbd2g
+            - name: EMAIL
+              value: dranelt@ornl.gov
+            - name: DOMAIN
+              value: data.ipsportal.development.svc.spin.nersc.org
+            - name: ENDPOINT_URL
+              value: https://rancher2.spin.nersc.gov/v3
+            - name: NAMESPACE
+              value: ipsportal
+            securityContext:
+              capabilities:
+                drop:
+                - ALL
+            volumeMounts:
+            - mountPath: /secrets
+              name: secrets
+            - mountPath: /data/letsencrypt
+              name: certbot-html
+            - mountPath: /etc/letsencrypt
+              name: certbot-certs
+          restartPolicy: Never
+          volumes:
+          - name: secrets
+            secret:
+              secretName: mongo-secrets
+          - name: certbot-html
+            persistentVolumeClaim:
+              claimName: certbot-html-data
+          - name: certbot-certs
+            persistentVolumeClaim:
+              claimName: certbot-certs-data
+  schedule: 32 1 * * *
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: ipsportal
+  name: certbot-html-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: nfs-client
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: ipsportal
+  name: certbot-certs-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: nfs-client
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: ipsportal
+  name: certbot-nginx-data
+  annotations:
+    field.cattle.io/targetWorkloadIds: '["ipsportal/certbot-nginx-data"]'
+spec:
+  ports:
+  - name: default
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: ipsportal-certbot-nginx-data
+
