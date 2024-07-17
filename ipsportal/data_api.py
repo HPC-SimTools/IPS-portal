@@ -13,7 +13,10 @@ bp = Blueprint("data", __name__)
 
 @bp.route("/api/data/runs")
 def data_runs() -> Tuple[Response, int]:
-    runs = [run["portal_runid"] for run in db.data.find(projection={"_id": False, "portal_runid": True})]
+    runs = [
+        run["portal_runid"]
+        for run in db.data.find(projection={"_id": False, "portal_runid": True})
+    ]
     return jsonify(runs), 200
 
 
@@ -106,6 +109,14 @@ def add() -> Tuple[Response, int]:
     if not portal_runid:
         return jsonify("Missing value for HTTP Header X-Ips-Portal-Runid"), 400
 
+    # Jupyter links are optional to associate with a data event.
+    # If they DO exist, we use a non-printable delimiter to separate links in the header value
+    juypter_links_header = request.headers.get("X-Ips-Jupyter-Links")
+    if juypter_links_header:
+        jupyter_links = juypter_links_header.split("\x01")
+    else:
+        jupyter_links = []
+
     # runid is needed because the portal_runid is not a valid bucket name for MINIO
     runid = get_runid(portal_runid)
     if runid is None:
@@ -132,11 +143,76 @@ def add() -> Tuple[Response, int]:
     db.data.update_one(
         {"portal_runid": portal_runid, "runid": runid},
         {
-            "$push": {"tags": {"tag": resolved_tag, "data_location_url": data_location_url}},
+            "$push": {
+                "tags": {
+                    "tag": resolved_tag,
+                    "data_location_url": data_location_url,
+                    "jupyter_urls": jupyter_links,
+                }
+            },
         },
         upsert=True,
     )
     return jsonify(data_location_url), 201
+
+
+@bp.route("/api/data/add_url", methods=["PUT"])
+def add_url() -> Tuple[Response, int]:
+    """
+    PUT Jupyter URL links
+
+    Response body should be JSON, i.e.
+    {
+      "url": "https://jupyterlink.com",
+      "tags": [
+        "1.1231",
+        "2324.124"
+      ]
+    }
+
+    The return value will be an array of data URL locations (JSONified). The response codes are:
+    - 200 - created
+    - 400 - portal_runid didn't exist, or structure of data was wrong
+    - 500 - server error
+    """
+
+    data = request.get_json()  # type: ignore[attr-defined]
+    errors = []
+    url = data.get('url')
+    if not isinstance(url, str):
+        errors.append({"url": "Must be provided and a string"})
+
+    if not isinstance(data.get('tags'), list):
+        errors.append({"tags": "Must be provided and a non-empty list"})
+    else:
+        try:
+            tag_lookups = set(map(float, data.get('tags')))
+        except ValueError:
+            errors.append({"tags": "Must be floating point values"})
+
+    portal_runid = data.get('portal_runid')
+    if not isinstance(portal_runid, str):
+        errors.append({"portal_runid": "Must be provided"})
+    else:
+        result = db.data.find_one(
+            {"portal_runid": portal_runid},
+        )
+        if not result:
+            errors.append({"portal_runid": f"{portal_runid} does not exist"})
+
+    if errors:
+        return jsonify(errors), 400
+
+    # TODO figure out how to do this entirely in Mongo
+    for tags_prop in result['tags']:  # type: ignore[index]
+        if tags_prop['tag'] in tag_lookups and url not in tags_prop['jupyter_urls']:
+            tags_prop['jupyter_urls'].append(url)
+    db.data.replace_one(
+        {'_id': result['_id']},  # type: ignore[index]
+        result  # type: ignore[arg-type]
+    )
+
+    return jsonify([]), 200
 
 
 @bp.route("/api/data/query", methods=["POST"])
@@ -146,7 +222,7 @@ def query() -> Tuple[Response, int]:
             sorted(
                 x["portal_runid"]
                 for x in db.data.find(
-                    request.get_json(), projection={"_id": False, "portal_runid": True}
+                    request.get_json(), projection={"_id": False, "portal_runid": True}  # type: ignore[attr-defined]
                 )
             )
         ),

@@ -1,52 +1,21 @@
+# minimal needed while testing out the application
+
 version: '3'
 services:
   db:
     image: mongo:6
     restart: unless-stopped
-
-  app:
-    build:
-      context: .
-    restart: unless-stopped
-    environment:
-      MONGO_HOST: db
-      MINIO_PRIVATE_URL: http://minio:9000
-      MINIO_PUBLIC_URL: http://localhost/files
-      JAEGER_HOST: jaeger
-    depends_on:
-     - db
-     - minio
-
-  jaeger:
-    image: jaegertracing/all-in-one:1.38
-    environment:
-      COLLECTOR_ZIPKIN_HOST_PORT: 9411
-      QUERY_BASE_PATH: /jaeger
-
-  web:
-    image: nginx
     ports:
-      - 80:80
-    volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - app
-      - jaeger
+      - 27017:27017
 
-  mongo-express:
-    image: mongo-express
-    ports:
-      - 8081:8081
-    environment:
-      ME_CONFIG_MONGODB_SERVER: db
-    depends_on:
-     - db
-  
   minio:
     image: "bitnami/minio:2024.6.4"
     environment:
       # references: https://github.com/bitnami/containers/blob/main/bitnami/minio/README.md
       MINIO_ROOT_USER: AKIAIOSFODNN7EXAMPLE
       MINIO_ROOT_PASSWORD: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+    ports:
+      - 9000:9000
+      - 9001:9001
     #volumes:
       #- "./tmp/minio:/bitnami/minio/data"

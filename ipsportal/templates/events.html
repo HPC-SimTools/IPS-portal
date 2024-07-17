@@ -105,10 +105,25 @@
 
 {% if data_info is not none %}
 <details>
-  <summary>Raw Data Files</summary>
+  <summary>Raw Data</summary>
   <ol>
   {% for item in data_info %}
-  <li><a class="raw-data-uri" href="{{item.data_location_url}}" download="{{run.portal_runid}}__{{item.tag}}">{{item.tag}}</a></li>
+  <li>
+    <details>
+      <summary>{{item.tag}}</summary>
+      <p><a class="raw-data-uri" href="{{item.data_location_url}}" download="{{run.portal_runid}}__{{item.tag}}">Download raw data</a></p>
+      {% if item.jupyter_urls %}
+      <details>
+        <summary>Associated JupyterHub Links</summary>
+        <ul>
+        {% for url in item.jupyter_urls %}
+          <li><a href="{{url}}">{{url}}</a></li>
+        {% endfor %}
+        </ul>
+      </details>  
+      {% endif %}    
+    </details>
+  </li>
   {% endfor %}
   </ol>
 </details>
