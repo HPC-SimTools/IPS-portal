@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from flask import Blueprint, jsonify, request, Response
+from pymongo.errors import PyMongoError
 from typing import Any, Tuple
 from .db import db, get_runid, get_data_tags
 from .minio import put_minio_object
@@ -109,14 +110,6 @@ def add() -> Tuple[Response, int]:
     if not portal_runid:
         return jsonify("Missing value for HTTP Header X-Ips-Portal-Runid"), 400
 
-    # Jupyter links are optional to associate with a data event.
-    # If they DO exist, we use a non-printable delimiter to separate links in the header value
-    juypter_links_header = request.headers.get("X-Ips-Jupyter-Links")
-    if juypter_links_header:
-        jupyter_links = juypter_links_header.split("\x01")
-    else:
-        jupyter_links = []
-
     # runid is needed because the portal_runid is not a valid bucket name for MINIO
     runid = get_runid(portal_runid)
     if runid is None:
@@ -147,7 +140,6 @@ def add() -> Tuple[Response, int]:
                 "tags": {
                     "tag": resolved_tag,
                     "data_location_url": data_location_url,
-                    "jupyter_urls": jupyter_links,
                 }
             },
         },
@@ -182,14 +174,6 @@ def add_url() -> Tuple[Response, int]:
     if not isinstance(url, str):
         errors.append({"url": "Must be provided and a string"})
 
-    if not isinstance(data.get('tags'), list):
-        errors.append({"tags": "Must be provided and a non-empty list"})
-    else:
-        try:
-            tag_lookups = set(map(float, data.get('tags')))
-        except ValueError:
-            errors.append({"tags": "Must be floating point values"})
-
     portal_runid = data.get('portal_runid')
     if not isinstance(portal_runid, str):
         errors.append({"portal_runid": "Must be provided"})
@@ -203,16 +187,14 @@ def add_url() -> Tuple[Response, int]:
     if errors:
         return jsonify(errors), 400
 
-    # TODO figure out how to do this entirely in Mongo
-    for tags_prop in result['tags']:  # type: ignore[index]
-        if tags_prop['tag'] in tag_lookups and url not in tags_prop['jupyter_urls']:
-            tags_prop['jupyter_urls'].append(url)
-    db.data.replace_one(
-        {'_id': result['_id']},  # type: ignore[index]
-        result  # type: ignore[arg-type]
-    )
-
-    return jsonify([]), 200
+    try:
+        db.data.update_one(
+            {"portal_runid": portal_runid},
+            {"$set": {"jupyter_url": url}},
+        )
+        return jsonify([]), 200
+    except PyMongoError:
+        return jsonify([{"portal_runid", "does not exist"}]), 400
 
 
 @bp.route("/api/data/query", methods=["POST"])

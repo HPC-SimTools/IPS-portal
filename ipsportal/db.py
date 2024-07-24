@@ -178,3 +178,12 @@ def get_data_tags(portal_runid: str) -> Optional[dict[str, Any]]:
     if result:
         return result.get('tags')
     return None
+
+
+def get_data_information(portal_runid: str) -> tuple[Optional[dict[str, Any]], Optional[str]]:
+    result = db.data.find_one(
+        {"portal_runid": portal_runid}, projection={"_id": False, "tags": True, "jupyter_url": True}
+    )
+    if result:
+        return result.get('tags'), result.get('jupyter_url')
+    return None, None

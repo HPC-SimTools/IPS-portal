@@ -100,6 +100,12 @@
     <td><a href="{{run.parent_runid}}">Run {{ run.parent_runid }}</a></td>
   </tr>
   {% endif %}
+  {% if jupyter_url %}
+  <tr>
+    <th>Associated JupyterHub Notebook</th>
+    <td><a href="{{jupyter_url}}">Explore JupyterHub Notebook</a></td>
+  </tr>
+  {% endif %}
   </tbody>
 </table>
 
@@ -112,16 +118,6 @@
     <details>
       <summary>{{item.tag}}</summary>
       <p><a class="raw-data-uri" href="{{item.data_location_url}}" download="{{run.portal_runid}}__{{item.tag}}">Download raw data</a></p>
-      {% if item.jupyter_urls %}
-      <details>
-        <summary>Associated JupyterHub Links</summary>
-        <ul>
-        {% for url in item.jupyter_urls %}
-          <li><a href="{{url}}">{{url}}</a></li>
-        {% endfor %}
-        </ul>
-      </details>  
-      {% endif %}    
     </details>
   </li>
   {% endfor %}
