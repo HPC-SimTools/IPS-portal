@@ -20,5 +20,5 @@ def run(runid: int) -> Tuple[str, int]:
         run['parent_runid'] = get_runid(str(run.get('parent_portal_runid')))
     else:
         run['parent_runid'] = None
-    data_info, jupyter_url = get_data_information(run['portal_runid'])
-    return render_template("events.html", run=run, data_info=data_info, jupyter_url=jupyter_url), 200
+    data_info, jupyter_urls = get_data_information(run['portal_runid'])
+    return render_template("events.html", run=run, data_info=data_info, jupyter_urls=jupyter_urls), 200

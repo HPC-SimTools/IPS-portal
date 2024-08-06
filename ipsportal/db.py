@@ -180,10 +180,10 @@ def get_data_tags(portal_runid: str) -> Optional[dict[str, Any]]:
     return None
 
 
-def get_data_information(portal_runid: str) -> tuple[Optional[dict[str, Any]], Optional[str]]:
+def get_data_information(portal_runid: str) -> tuple[Optional[list[dict[str, Any]]], Optional[list[str]]]:
     result = db.data.find_one(
-        {"portal_runid": portal_runid}, projection={"_id": False, "tags": True, "jupyter_url": True}
+        {"portal_runid": portal_runid}, projection={"_id": False, "tags": True, "jupyter_urls": True}
     )
     if result:
-        return result.get('tags'), result.get('jupyter_url')
+        return result.get('tags'), result.get('jupyter_urls')
     return None, None

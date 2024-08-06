@@ -100,10 +100,17 @@
     <td><a href="{{run.parent_runid}}">Run {{ run.parent_runid }}</a></td>
   </tr>
   {% endif %}
-  {% if jupyter_url %}
+  {% if jupyter_urls %}
   <tr>
-    <th>Associated JupyterHub Notebook</th>
-    <td><a href="{{jupyter_url}}">Explore JupyterHub Notebook</a></td>
+    <th>Associated JupyterHub Notebooks</th>
+    <td><ul>
+      {% for url in jupyter_urls %}
+      {% set notebook_name = url.rpartition('/')[2] %}
+      <li>
+      <a href="{{url}}">{{notebook_name}}</a>
+      </li>
+      {% endfor %}
+    </ul></td>
   </tr>
   {% endif %}
   </tbody>

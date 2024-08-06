@@ -3,8 +3,8 @@ from __future__ import annotations
 import logging
 from flask import Blueprint, jsonify, request, Response
 from pymongo.errors import PyMongoError
-from typing import Any, Tuple
-from .db import db, get_runid, get_data_tags
+from typing import Tuple
+from .db import db, get_runid
 from .minio import put_minio_object
 
 logger = logging.getLogger(__name__)
@@ -26,62 +26,6 @@ def data(portal_runid: str) -> Tuple[Response, int]:
     result = db.data.find_one({"portal_runid": portal_runid}, projection={"_id": False})
     if result:
         return jsonify(result), 200
-    return jsonify("Not Found"), 404
-
-
-@bp.route("/api/data/<string:portal_runid>/tags")
-def tags(portal_runid: str) -> Tuple[Response, int]:
-    result = get_data_tags(portal_runid)
-    if result:
-        return jsonify(result), 200
-    return jsonify("Not Found"), 404
-
-
-@bp.route("/api/data/<string:portal_runid>/<string:tag>")
-def tagx(portal_runid: str, tag: str) -> Tuple[Response, int]:
-    result: dict[str, Any] | None = db.data.find_one(
-        {"portal_runid": portal_runid}, projection={"_id": False, f"data.{tag}": True}
-    )
-    if result:
-        result = result.get("data")
-        if result:
-            result = result.get(tag)
-            if result:
-                return jsonify(result), 200
-    return jsonify("Not Found"), 404
-
-
-@bp.route("/api/data/<string:portal_runid>/<string:tag>/parameters")
-def parameters(portal_runid: str, tag: str) -> Tuple[Response, int]:
-    result: dict[str, Any] | None = db.data.find_one(
-        {"portal_runid": portal_runid}, projection={"_id": False, f"data.{tag}": True}
-    )
-    if result:
-        result = result.get("data")
-        if result:
-            result = result.get(tag)
-            if result:
-                return jsonify(list(result.keys())), 200
-    return jsonify("Not Found"), 404
-
-
-@bp.route("/api/data/<string:portal_runid>/<string:timestamp>/<string:parameter>")
-def parameter(
-    portal_runid: str, timestamp: str, parameter: str
-) -> Tuple[Response, int]:
-    result: dict[str, Any] | None = db.data.find_one(
-        {"portal_runid": portal_runid},
-        projection={"_id": False, f"data.{timestamp}.{parameter}": True},
-    )
-
-    if result:
-        result = result.get("data")
-        if result:
-            result = result.get(timestamp)
-            if result:
-                result = result.get(parameter)
-                if result:
-                    return jsonify(result), 200
     return jsonify("Not Found"), 404
 
 
@@ -133,33 +77,35 @@ def add() -> Tuple[Response, int]:
     except ValueError:
         resolved_tag = tag  # type: ignore
 
-    db.data.update_one(
-        {"portal_runid": portal_runid, "runid": runid},
-        {
-            "$push": {
-                "tags": {
-                    "tag": resolved_tag,
-                    "data_location_url": data_location_url,
-                }
+    try:
+        db.data.update_one(
+            {"portal_runid": portal_runid, "runid": runid},
+            {
+                "$push": {
+                    "tags": {
+                        "tag": resolved_tag,
+                        "data_location_url": data_location_url,
+                    }
+                },
             },
-        },
-        upsert=True,
-    )
-    return jsonify(data_location_url), 201
+            upsert=True,
+        )
+        return jsonify(data_location_url), 201
+    except PyMongoError as e:
+        print(e)
+        return jsonify('unable to fully link data', e), 500
 
 
-@bp.route("/api/data/add_url", methods=["PUT"])
+@bp.route("/api/data/add_url", methods=["POST"])
 def add_url() -> Tuple[Response, int]:
     """
-    PUT Jupyter URL links
+    Update Jupyter data table with a Jupyter link URL links
 
-    Response body should be JSON, i.e.
+    Request body should be JSON, i.e.:
+
     {
-      "url": "https://jupyterlink.com",
-      "tags": [
-        "1.1231",
-        "2324.124"
-      ]
+      "portal_runid": "the_portal_runid",
+      "url": "https://jupyterlink.com"
     }
 
     The return value will be an array of data URL locations (JSONified). The response codes are:
@@ -177,36 +123,23 @@ def add_url() -> Tuple[Response, int]:
     portal_runid = data.get('portal_runid')
     if not isinstance(portal_runid, str):
         errors.append({"portal_runid": "Must be provided"})
-    else:
-        result = db.data.find_one(
-            {"portal_runid": portal_runid},
-        )
-        if not result:
-            errors.append({"portal_runid": f"{portal_runid} does not exist"})
 
     if errors:
         return jsonify(errors), 400
 
+    runid = get_runid(portal_runid)
+
     try:
         db.data.update_one(
-            {"portal_runid": portal_runid},
-            {"$set": {"jupyter_url": url}},
+            {"portal_runid": portal_runid, "runid": runid},
+            {
+                "$push": {
+                    "jupyter_urls": url,
+                },
+            },
+            upsert=True,
         )
-        return jsonify([]), 200
-    except PyMongoError:
-        return jsonify([{"portal_runid", "does not exist"}]), 400
-
-
-@bp.route("/api/data/query", methods=["POST"])
-def query() -> Tuple[Response, int]:
-    return (
-        jsonify(
-            sorted(
-                x["portal_runid"]
-                for x in db.data.find(
-                    request.get_json(), projection={"_id": False, "portal_runid": True}  # type: ignore[attr-defined]
-                )
-            )
-        ),
-        200,
-    )
+        return jsonify('URL update OK'), 201
+    except PyMongoError as e:
+        print(e)
+        return jsonify("unable to add URL"), 500
