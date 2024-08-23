@@ -171,6 +171,7 @@ def event() -> Tuple[Response, int]:
             successes += 1
             output['message'] = "New run created and " + output['message']
             output['runid'] = runid
+            output['simname'] = e['simname']
             continue
 
         update: Dict[str, Any] = {"$push": {"events": e}}
