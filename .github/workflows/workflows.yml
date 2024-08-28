@@ -70,7 +70,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Start IPS-portal with docker-compose
-      run: docker-compose up -f docker-compose-complete.yml --build -d
+      run: docker compose -f docker-compose-complete.yml up --build -d
 
     - name: Run test
       run: |
