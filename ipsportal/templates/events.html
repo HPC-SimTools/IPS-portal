@@ -2,6 +2,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='events.css') }}" />
+<script src="{{ url_for('static', filename='jupyter_url.js') }}" defer></script>
 <script src="{{ url_for('static', filename='event-table.js') }}" defer></script>
 <script src="{{ url_for('static', filename='child-runs-table.js') }}" defer></script>
 {% endblock %}
@@ -65,7 +66,7 @@
   <tr>
     <th>Monitor</th>
     {% if run.vizurl %}
-    <td><a href=https://{{ run.vizurl }}>monitor<a></td>
+    <td><a href="https://{{ run.vizurl }}">monitor<a></td>
     {% else %}
     <td></td>
     {% endif %}
@@ -104,11 +105,15 @@
   <tr>
     <th>Associated JupyterHub Notebooks</th>
     <td><ul>
-      {% for url in jupyter_urls %}
-      {% set notebook_name = url.rpartition('/')[2] %}
-      <li>
-      <a href="{{url}}">{{notebook_name}}</a>
-      </li>
+      {% for url, host in jupyter_urls %}
+        <li>
+        {% set notebook_name = url.rpartition('/')[2] %}
+        {% if host == "jupyter.nersc.gov" %}
+          <button class="jupyter-url-btn" data-original-url="{{url}}">{{notebook_name}}</button>
+        {% else %}
+          <a href="{{url}}">{{notebook_name}}</a>
+        {% endif %}
+        </li>
       {% endfor %}
     </ul></td>
   </tr>

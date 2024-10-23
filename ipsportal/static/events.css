@@ -23,3 +23,13 @@ details[open] summary {
 ol {
     padding-left: 4rem;
 }
+
+.jupyter-url-btn {
+  font-size: 100%;
+  font-family: inherit;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  background-color: inherit;
+  color: rgba(var(--bs-link-color-rgb),var(--bs-link-opacity,1));
+}

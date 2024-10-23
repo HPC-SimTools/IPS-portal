@@ -1,4 +1,6 @@
 from typing import Tuple
+from urllib3.util import parse_url
+
 from flask import Blueprint, render_template
 from ipsportal.db import get_run, get_runid, get_data_information
 
@@ -21,4 +23,8 @@ def run(runid: int) -> Tuple[str, int]:
     else:
         run['parent_runid'] = None
     data_info, jupyter_urls = get_data_information(run['portal_runid'])
-    return render_template("events.html", run=run, data_info=data_info, jupyter_urls=jupyter_urls), 200
+    if jupyter_urls:
+        resolved_jupyter_urls = [[jupyter_url, parse_url(jupyter_url).host] for jupyter_url in jupyter_urls]
+    else:
+        resolved_jupyter_urls = None
+    return render_template("events.html", run=run, data_info=data_info, jupyter_urls=resolved_jupyter_urls), 200
