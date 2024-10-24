@@ -3,20 +3,20 @@
 
 const NERSC_URL_HELPER_STORAGE_KEY = "username__jupyter.nersc.gov";
 
-function onJupyterUrlBtnClick() {
-  const nersc_username = prompt(
-    "Enter the username you authenticate with on NERSC Shibboleth.",
+function onJupyterUrlBtnClick(event) {
+  const nerscUsername = window.prompt(
+    "Enter your NERSC username.",
     window.localStorage.getItem(NERSC_URL_HELPER_STORAGE_KEY) || ""
   );
-  if (nersc_username != null) {
-    window.localStorage.setItem(NERSC_URL_HELPER_STORAGE_KEY, nersc_username);
-    const result = jupyterUrlBtn
+  if (nerscUsername != null) {
+    window.localStorage.setItem(NERSC_URL_HELPER_STORAGE_KEY, nerscUsername);
+    const result = event.currentTarget
       .getAttribute("data-original-url")
-      .replace(new RegExp("/user/[^/]+/"), `/user/${nersc_username}/`);
-    window.location.href = result;
+      .replace(new RegExp("/user/[^/]+/"), `/user/${nerscUsername}/`);
+    window.open(result);
   }
 }
 
-for (jupyterUrlBtn of document.getElementsByClassName("jupyter-url-btn")) {
+for (let jupyterUrlBtn of document.getElementsByClassName("jupyter-url-btn")) {
   jupyterUrlBtn.addEventListener("click", onJupyterUrlBtnClick);
 }
