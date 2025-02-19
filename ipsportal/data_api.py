@@ -4,8 +4,10 @@ import logging
 from flask import Blueprint, jsonify, request, Response
 from pymongo.errors import PyMongoError
 from typing import Tuple
+
 from .db import db, get_runid
-from .minio import put_minio_object
+from .environment import SECRET_API_KEY
+from .jupyter import add_analysis_data_file_for_timestep, add_jupyter_notebook
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +31,7 @@ def data(portal_runid: str) -> Tuple[Response, int]:
     return jsonify("Not Found"), 404
 
 
+'''
 @bp.route("/api/data", methods=["POST"])
 def add() -> Tuple[Response, int]:
     """
@@ -39,9 +42,14 @@ def add() -> Tuple[Response, int]:
 
     The return value will be an array of data URL locations (JSONified). The response codes are:
     - 500 - adding something to MINIO/Mongo screwed up
+    - 401 - unauthorized
     - 400 - missing some important metadata in the headers
     - 201 - all went well, created
     """
+
+    api_key = request.headers.get("X-Api-Key")
+    if api_key != SECRET_API_KEY:
+        return jsonify(message="Authorization failed"), 401    
 
     if not request.data:
         return jsonify("Missing request body"), 400
@@ -94,6 +102,149 @@ def add() -> Tuple[Response, int]:
     except PyMongoError as e:
         print(e)
         return jsonify('unable to fully link data', e), 500
+'''
+
+@bp.route("/api/data/add_notebook", methods=["POST"])
+def add_notebook() -> Tuple[Response, int]:
+    """
+    Add a JupyterHub Notebook
+
+    Required Parameters:
+    - X-Api-Key - auth
+    - X-Ips-Username - username
+    - X-Ips-Filename - name of file we want to add (no directories)
+    - X-Ips-Portal-Runid - portal runid, this must already exist
+    
+    request body = the notebook itself, in bytes
+
+    The return value will be an array of data URL locations (JSONified). The response codes are:
+    - 500 - server screwed up
+    - 401 - unauthorized
+    - 400 - missing some important metadata in the headers, or parameter validation error
+    - 201 - all went well, created
+    """
+
+    # TODO: later on need to implement real Authentication/Authorization
+    api_key = request.headers.get("X-Api-Key")
+    if api_key != SECRET_API_KEY:
+        return jsonify(message="Authorization failed"), 401    
+
+    if request.headers.get("Content-Type") != "application/octet-stream":
+        return jsonify("Content-Type HTTP header value must be 'application/octet-stream'"), 415
+
+    username = request.headers.get("X-Ips-Username")
+    if not username:
+        return jsonify('Missing value for HTTP Header X-Ips-Username'), 400
+
+    filename = request.headers.get("X-Ips-Filename")
+    if not filename:
+        return jsonify('Missing value for HTTP Header X-Ips-Filename'), 400
+
+    if not request.data:
+        return jsonify("Missing request body"), 400
+
+    portal_runid = request.headers.get("X-Ips-Portal-Runid")
+    if not portal_runid:
+        return jsonify("Missing value for HTTP Header X-Ips-Portal-Runid"), 400
+
+    # TODO fix this block
+    try:
+        runid = int(portal_runid)
+    except ValueError:
+        return jsonify("Invalid value for HTTP Header X-Ips-Portal-Runid"), 400 
+    #runid = get_runid(portal_runid)
+    #print('portal_runid', portal_runid, 'runid', runid)
+    #if runid is None:
+        # should never really see this because we should already have the IPS-Start event saved at this point
+        #return jsonify("Invalid value for HTTP Header X-Ips-Portal-Runid"), 400
+
+    result = add_jupyter_notebook(runid, username, filename, request.data)
+
+    if result[1] < 400:
+        try:
+            db.data.update_one(
+                {"runid": runid},
+                {
+                    "$push": {
+                        "jupyter_urls": result[0],
+                    },
+                },
+                upsert=True,
+            )
+        except PyMongoError as e:
+            logger.error(e)
+            return jsonify("unable to add URL but did add notebook"), 500    
+    return jsonify(result[0]), result[1]
+
+
+@bp.route("/api/data/add_data_file", methods=["POST"])
+def add_data_file() -> Tuple[Response, int]:
+    """
+    Add a data file to the filesystem and the module file.
+
+    Required Parameters:
+    - X-Api-Key - auth
+    - X-Ips-Username - username
+    - X-Ips-Filename - name of file we want to add (no directories)
+    - X-Ips-Tag - timestep
+    - X-Ips-Portal-Runid - portal runid, this must already exist
+    
+    request body = the data file itself, in bytes
+
+    Optional Parameters:
+    - X-Ips-Replace - leave value empty if additive, remove if replacing
+
+    The return value will be an array of data URL locations (JSONified). The response codes are:
+    - 500 - server screwed up
+    - 401 - unauthorized
+    - 400 - missing some important metadata in the headers, or parameter validation error
+    - 201 - all went well, created
+    """
+
+    # TODO: later on need to implement real Authentication/Authorization
+    api_key = request.headers.get("X-Api-Key")
+    if api_key != SECRET_API_KEY:
+        return jsonify(message="Authorization failed"), 401    
+
+    if request.headers.get("Content-Type") != "application/octet-stream":
+        return jsonify("Content-Type HTTP header value must be 'application/octet-stream'"), 415
+
+    username = request.headers.get("X-Ips-Username")
+    if not username:
+        return jsonify('Missing value for HTTP Header X-Ips-Username'), 400
+
+    filename = request.headers.get("X-Ips-Filename")
+    if not filename:
+        return jsonify('Missing value for HTTP Header X-Ips-Filename'), 400
+
+    if not request.data:
+        return jsonify("Missing request body"), 400
+
+    tag = request.headers.get("X-Ips-Tag")
+    if not tag:
+        return jsonify("Missing value for HTTP Header X-Ips-Tag"), 400
+    try:
+        timestep = float(tag)   # type: ignore[assignment]
+    except ValueError:
+        return jsonify("Invalid value for HTTP Header X-Ips-Tag"), 400
+
+    replace = bool(request.headers.get("X-Ips-Replace"))
+
+    portal_runid = request.headers.get("X-Ips-Portal-Runid")
+    if not portal_runid:
+        return jsonify("Missing value for HTTP Header X-Ips-Portal-Runid"), 400
+
+    try:
+        runid = int(portal_runid)
+    except ValueError:
+        return jsonify("Invalid value for HTTP Header X-Ips-Portal-Runid"), 400
+    #runid = get_runid(portal_runid)
+    #if runid is None:
+        #return jsonify("Invalid value for HTTP Header X-Ips-Portal-Runid"), 400
+
+    result = add_analysis_data_file_for_timestep(runid, username, filename, request.data, timestep, replace)
+    return jsonify(result[0]), result[1]
+
 
 
 @bp.route("/api/data/add_url", methods=["POST"])

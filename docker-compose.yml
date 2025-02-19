@@ -1,6 +1,5 @@
 # minimal needed while testing out the application
 
-version: '3'
 services:
   db:
     image: mongo:6

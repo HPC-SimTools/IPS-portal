@@ -9,7 +9,7 @@ Setup environment with python venv and install IPS-portal:
 ```shell
 python -m venv env
 source env/bin/activate
-python -m pip install -e .[dev]
+python -m pip install -e ".[dev]"
 ```
 
 If that fails with `ERROR: File "setup.py" not found.` try upgrading pip first:

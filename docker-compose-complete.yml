@@ -1,10 +1,11 @@
 # full software stack
 
-version: '3'
 services:
   db:
     image: mongo:6
     restart: unless-stopped
+    ports:  # ports are used strictly for running tests locally
+      - 27017:27017
 
   app:
     build:
@@ -24,6 +25,9 @@ services:
     environment:
       COLLECTOR_ZIPKIN_HOST_PORT: 9411
       QUERY_BASE_PATH: /jaeger
+    ports:  # ports are used strictly for running tests locally
+      - 16686:16686
+      - 9411:9411
 
   web:
     image: nginx

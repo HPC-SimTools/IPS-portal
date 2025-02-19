@@ -20,6 +20,7 @@ from ipsportal.db import (
     get_portal_runid,
     get_parent_portal_runid,
 )
+#from ipsportal.environment import SECRET_API_KEY
 from ipsportal.trace import send_trace
 from ipsportal.util import ALLOWED_PROPS_RUN
 
@@ -126,6 +127,10 @@ def trace(portal_runid: str) -> Tuple[Response, int]:
 @bp.route("/", methods=['POST'])
 @bp.route("/api/event", methods=['POST'])
 def event() -> Tuple[Response, int]:
+    #api_key = request.headers.get("X-Api-Key")
+    #if api_key != SECRET_API_KEY:
+        #return jsonify(message="Authorization failed"), 401
+
     event_list: Optional[Union[List[Dict[str, Any]], Dict[str, Any]]] = request.get_json()  # type: ignore[attr-defined]
 
     if event_list is None:

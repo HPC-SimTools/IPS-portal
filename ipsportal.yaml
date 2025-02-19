@@ -167,6 +167,8 @@ spec:
             name: mongo-secrets
         - secretRef:
             name: minio-secrets
+        - secretRef:
+            name: ipsportal-secrets
         env:
         - name: JAEGER_HOST
           value: jaeger
@@ -176,10 +178,26 @@ spec:
           value: https://data.ipsportal.development.svc.spin.nersc.org
         - name: TZ
           value: America/Los_Angeles
+        - name: JUPYTERHUB_PORTAL_DIR
+          # value should be the same as the directory in the CONTAINER
+          value: /tmp/ipsportal-jupyter
+        - name: JUPYTERHUB_DIR
+          # value should be the same as the directory on the HOST
+          value: /global/cfs/cdirs/atom/users/ipsportal/ipsportal-runs-development
+        - name: JUPYTERHUB_BASE_URL
+          # empty because we use a special NERSC implementation to resolve the URL
+          value: ''
+        - name: JUPYTERHUB_IMPLEMENTATION
+          value: nersc
         securityContext:
+          allowPrivilegeEscalation: false
           capabilities:
             drop:
-            - ALL
+              - ALL
+          privileged: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 102616
         livenessProbe:
           httpGet:
             path: /
@@ -190,6 +208,18 @@ spec:
             path: /
             port: 8080
             scheme: HTTP
+        volumeMounts:
+          - mountPath: /tmp/ipsportal-jupyter
+            name: jupyterhub-data-files
+      securityContext:
+        fsGroup: 62365
+        runAsGroup: 62365
+        runAsUser: 102616
+      volumes:
+        - hostPath:
+            path: /global/cfs/cdirs/atom/users/ipsportal/ipsportal-runs-development
+            type: Directory
+          name: jupyterhub-data-files        
 
 ---
 kind: Deployment
@@ -312,7 +342,7 @@ spec:
                 drop:
                 - ALL
               runAsNonRoot: true
-              runAsUser: 59432
+              runAsUser: 102616
             volumeMounts:
             - mountPath: /backup
               name: backup
@@ -596,6 +626,9 @@ kind: Ingress
 metadata:
   namespace: ipsportal
   name: data
+  #annotations:
+    #nginx.ingress.kubernetes.io/use-regex: "true"
+    #nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   rules:
   - host: data.ipsportal.development.svc.spin.nersc.org

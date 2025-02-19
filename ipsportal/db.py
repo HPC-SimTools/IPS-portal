@@ -3,20 +3,21 @@ from pymongo import MongoClient, ASCENDING, DESCENDING
 from pymongo.database import Database
 from werkzeug.local import LocalProxy
 from flask import g, Flask
-import os
+
+from .environment import MONGO_HOST, MONGO_PASSWORD, MONGO_PORT, MONGO_USERNAME
 
 
 def get_db() -> Database[Dict[str, Any]]:
     if 'db' not in g:
         client: MongoClient[Dict[str, Any]] = MongoClient(
-                             host=os.environ.get('MONGO_HOST', 'localhost'),
-                             port=int(os.environ.get('MONGO_PORT', 27017)),
-                             username=os.environ.get('MONGO_USERNAME'),
-                             password=os.environ.get('MONGO_PASSWORD'))
+                             host=MONGO_HOST,
+                             port=MONGO_PORT,  # type: ignore[arg-type]
+                             username=MONGO_USERNAME,
+                             password=MONGO_PASSWORD)
         client.portal.runs.create_index([('runid', DESCENDING)], unique=True)
         client.portal.runs.create_index([('portal_runid', ASCENDING)], unique=True)
         client.portal.data.create_index([('runid', DESCENDING)], unique=True)
-        client.portal.data.create_index([('portal_runid', ASCENDING)], unique=True)
+        #client.portal.data.create_index([('portal_runid', ASCENDING)], unique=True)
         g.db = client.portal
 
     return g.db  # type: ignore[no-any-return]
@@ -180,9 +181,9 @@ def get_data_tags(portal_runid: str) -> Optional[dict[str, Any]]:
     return None
 
 
-def get_data_information(portal_runid: str) -> tuple[Optional[list[dict[str, Any]]], Optional[list[str]]]:
+def get_data_information(runid: int) -> tuple[Optional[list[dict[str, Any]]], Optional[list[str]]]:
     result = db.data.find_one(
-        {"portal_runid": portal_runid}, projection={"_id": False, "tags": True, "jupyter_urls": True}
+        {"runid": runid}, projection={"_id": False, "tags": True, "jupyter_urls": True}
     )
     if result:
         return result.get('tags'), result.get('jupyter_urls')
