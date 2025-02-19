@@ -8,4 +8,4 @@ class Driver(Component):
 
 class Worker(Component):
     def step(self, timestamp=0.0):
-        self.services.send_portal_event(event_comment="Hello portal, from Worker")
+        self.services.send_portal_event(event_comment='Hello portal, from Worker')

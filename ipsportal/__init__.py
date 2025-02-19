@@ -1,14 +1,18 @@
 import os
-from typing import Optional, Mapping, Any
+from collections.abc import Mapping
+from typing import Any
+
 from flask import Flask
 
+from ipsportal import trace_jaeger
 
-def create_app(test_config: Optional[Mapping[str, Any]] = None) -> Flask:
+from .environment import SECRET_API_KEY
+
+
+def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
-    app.config.from_mapping(
-        SECRET_KEY='dev'
-    )
+    app.config.from_mapping(SECRET_KEY=SECRET_API_KEY)
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
@@ -24,12 +28,14 @@ def create_app(test_config: Optional[Mapping[str, Any]] = None) -> Flask:
         pass
 
     from . import db
+
     db.init_app(app)
 
-    from ipsportal import run, resourceplot, trace, api, data_api
+    from ipsportal import api, data_api, resourceplot, run
+
     app.register_blueprint(run.bp)
     app.register_blueprint(resourceplot.bp)
-    app.register_blueprint(trace.bp)
+    app.register_blueprint(trace_jaeger.bp)
     app.register_blueprint(api.bp)
     app.register_blueprint(data_api.bp)
 

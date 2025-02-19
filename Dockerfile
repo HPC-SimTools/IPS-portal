@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.10
 
 ADD . /code
 RUN cd /code && python -m pip install .

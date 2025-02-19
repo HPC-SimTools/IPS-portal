@@ -182,7 +182,7 @@ def update_module_file_with_data_files(dest: Path, filename: str, replace: bool,
       - if we replaced a file, the name of the file which was replaced; otherwise, None
     """
     module_file = dest / f'{DATA_MODULE_NAME}.py'
-    with open(module_file, 'r') as f:
+    with open(module_file) as f:
         old_module_code = f.read()
 
     new_listing = f"f'{{{DIRECTORY_VARIABLE_NAME}}}{filename}',"
@@ -198,7 +198,9 @@ def update_module_file_with_data_files(dest: Path, filename: str, replace: bool,
             new_module_code = re.sub(search_pattern, new_str, old_module_code, count=1)
         else:
             # need to append the timestamp dictionary value with the new file listing
-            new_module_code = re.sub(search_pattern, f"{found_match.group(0)[:-3]}{new_listing}],\n", old_module_code, count=1)
+            new_module_code = re.sub(
+                search_pattern, f'{found_match.group(0)[:-3]}{new_listing}],\n', old_module_code, count=1
+            )
     else:
         # need to add new timestamp dictionary key
         new_module_code = replace_last(old_module_code, '}', new_str + '}')

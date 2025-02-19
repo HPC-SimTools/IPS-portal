@@ -1,19 +1,20 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Callable, Literal
+from typing import TYPE_CHECKING, Any, Literal
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
-class SortParamException(Exception):
-    def __init__(self, property: str, message: str, *args: object) -> None:
+class SortParamError(Exception):
+    def __init__(self, prop: str, message: str, *args: object) -> None:
         super().__init__(*args)
-        self.property = property
+        self.property = prop
         self.message = message
 
 
-def _parse_sort_arguments(
-    request: dict[str, Any], allowed_props: list[str]
-) -> dict[str, int]:
+def _parse_sort_arguments(request: dict[str, Any], allowed_props: list[str]) -> dict[str, int]:
     """Parse sort arguments from DataTables
 
     Params:
@@ -31,88 +32,84 @@ def _parse_sort_arguments(
         DataTables queries this API, but may be raised if the API is used directly elsewhere.
     """
     sort_dict: dict[str, int] = {}
-    columns: list[Any] = request.get("columns", None)
+    columns: list[Any] = request.get('columns', None)  # noqa: SIM910
     if not isinstance(columns, list):
-        raise SortParamException("columns", "must be an array")
-    for idx, sort_args in enumerate(request.get("order", [])):
+        prop = 'columns'
+        raise SortParamError(prop, 'must be an array')
+    for idx, sort_args in enumerate(request.get('order', [])):
         col_idx = 0
         err = False
         try:
-            col_idx = sort_args["column"]
+            col_idx = sort_args['column']
             if col_idx >= len(allowed_props):
                 err = True
         except KeyError:
             err = True
         if err:
-            raise SortParamException(f"order[{idx}]", "invalid column reference")
+            prop = f'order[{idx}]'
+            raise SortParamError(prop, 'invalid column reference')
         try:
             column = columns[col_idx]
         except IndexError:
-            raise SortParamException(
-                f'order[{idx}]["column"]', "invalid column reference"
-            )
+            prop = f'order[{idx}]["column"]'
+            raise SortParamError(prop, 'invalid column reference') from None
 
         try:
-            sort_dir = sort_args["dir"]
-            if sort_dir == "asc":
+            sort_dir = sort_args['dir']
+            if sort_dir == 'asc':
                 sort_code = 1
-            elif sort_dir == "desc":
+            elif sort_dir == 'desc':
                 sort_code = -1
             else:
-                raise SortParamException(
-                    f'order[{idx}]["dir"]', 'must be either "asc" or "desc"'
-                )
+                prop = f'order[{idx}]["dir"]'
+                raise SortParamError(prop, 'must be either "asc" or "desc"')
         except KeyError:
-            raise SortParamException(
-                f'order[{idx}]["dir"]', 'must be either "asc" or "desc"'
-            )
+            prop = f'order[{idx}]["dir"]'
+            raise SortParamError(prop, 'must be either "asc" or "desc"') from None
 
         if not isinstance(column, dict):
-            raise SortParamException(
-                f"columns[{col_idx}]", "must be a valid DataTables column object"
-            )
+            prop = f'columns[{col_idx}]'
+            raise SortParamError(prop, 'must be a valid DataTables column object')
 
-        if column.get("orderable", False):
+        if column.get('orderable', False):
             err = False
             try:
-                dataname = column["data"]
+                dataname = column['data']
                 # if "columns" were defined client-side
                 if isinstance(dataname, str):
                     if dataname in allowed_props:
                         sort_dict[dataname] = sort_code
                     else:
-                        raise SortParamException(
-                            f"columns[{col_idx}][data]", "must be a valid property name"
-                        )
+                        prop = f'columns[{col_idx}][data]'
+                        raise SortParamError(prop, 'must be a valid property name')
                 # if "columns" were not defined client-side
                 elif isinstance(dataname, int):
                     try:
                         sort_dict[allowed_props[dataname]] = sort_code
                     except IndexError:
-                        raise SortParamException(
-                            f"columns[{col_idx}][data]",
-                            "must be a valid property index",
-                        )
+                        prop = f'columns[{col_idx}][data]'
+                        raise SortParamError(
+                            prop,
+                            'must be a valid property index',
+                        ) from None
                 else:
-                    raise SortParamException(
-                        f"columns[{col_idx}][data]",
-                        "must be a valid property name or property index",
+                    prop = f'columns[{col_idx}][data]'
+                    raise SortParamError(
+                        prop,
+                        'must be a valid property name or property index',
                     )
             except KeyError:
-                raise SortParamException(
-                    f"columns[{col_idx}]", 'missing "data" property'
-                )
+                prop = f'columns[{col_idx}]'
+                raise SortParamError(prop, 'missing "data" property') from None
 
     if sort_dict:
         # enforce sort consistency in case all other properties are equal
-        sort_dict["_id"] = 1
+        sort_dict['_id'] = 1
 
     return sort_dict
 
 
-def _add_search_terms(
-    search_terms: list[str], allowed_props: list[str]
-) -> dict[str, list[dict[str, Any]]]:
+def _add_search_terms(search_terms: list[str], allowed_props: list[str]) -> dict[str, list[dict[str, Any]]]:
     """Parse global search option from DataTables
 
     This simply adds an ignore-case regex search option for every column.
@@ -125,13 +122,8 @@ def _add_search_terms(
       value to update the $match filter with
     """
     return {
-        "$and": [
-            {
-                "$or": [
-                    {column: {"$regex": search_term, "$options": "i"}}
-                    for column in allowed_props
-                ]
-            }
+        '$and': [
+            {'$or': [{column: {'$regex': search_term, '$options': 'i'}} for column in allowed_props]}
             for search_term in search_terms
         ]
     }
@@ -175,27 +167,25 @@ def get_datatables_results(
       - OnSuccess: True, followed by the DataTables response (as a dictionary - not serialized yet)
     """
     if not isinstance(request, dict):
-        return False, (
-            ("<BASE>", "query parameter must be a DataTables JSON object string")
-        )
+        return False, (('<BASE>', 'query parameter must be a DataTables JSON object string'))
 
     errors: list[tuple[str, str]] = []
 
-    draw = request.get("draw", 0)
+    draw = request.get('draw', 0)
     if not isinstance(draw, int) or draw < 0:
-        errors.append(("draw", "must be a non-negative integer"))
+        errors.append(('draw', 'must be a non-negative integer'))
 
-    start = request.get("start", 0)
+    start = request.get('start', 0)
     if not isinstance(start, int) or start < 0:
-        errors.append(("start", "must be a non-negative integer"))
+        errors.append(('start', 'must be a non-negative integer'))
 
-    length = request.get("length", 20)
+    length = request.get('length', 20)
     if not isinstance(length, int) or length < 1:
-        errors.append(("length", "must be a positive integer"))
+        errors.append(('length', 'must be a positive integer'))
 
     try:
         sort_args = _parse_sort_arguments(request, allowed_props)
-    except SortParamException as e:
+    except SortParamError as e:
         sort_args = {}
         errors.append((e.property, e.message))
 
@@ -204,9 +194,9 @@ def get_datatables_results(
 
     # TODO: currently only checking global search, but DataTables API allows for per-column search
     where_filter = deepcopy(base_filter) if base_filter else {}
-    search = request.get("search")
+    search = request.get('search')
     if isinstance(search, dict):
-        search_value = search.get("value")
+        search_value = search.get('value')
         if isinstance(search_value, str):
             # TODO should probably sanitize this search result
             search_values = search_value.split()
@@ -216,9 +206,9 @@ def get_datatables_results(
     return (
         True,
         {
-            "draw": draw,
-            "recordsTotal": count_query_fn(base_filter or {}),
-            "recordsFiltered": count_query_fn(where_filter),
-            "data": data_query_fn(where_filter, start, length, sort_args),
+            'draw': draw,
+            'recordsTotal': count_query_fn(base_filter or {}),
+            'recordsFiltered': count_query_fn(where_filter),
+            'data': data_query_fn(where_filter, start, length, sort_args),
         },
     )

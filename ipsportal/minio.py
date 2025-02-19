@@ -1,7 +1,6 @@
 import json
 import logging
 from io import BytesIO
-from typing import Optional
 
 from minio import Minio
 from minio.error import MinioException
@@ -31,19 +30,19 @@ def get_bucket_policy(bucket_name: str) -> str:
     """
     return json.dumps(
         {
-            "Version": "2012-10-17",
-            "Statement": [
+            'Version': '2012-10-17',
+            'Statement': [
                 {
-                    "Effect": "Allow",
-                    "Principal": {"AWS": "*"},
-                    "Action": ["s3:GetBucketLocation", "s3:ListBucket"],
-                    "Resource": f"arn:aws:s3:::{bucket_name}",
+                    'Effect': 'Allow',
+                    'Principal': {'AWS': '*'},
+                    'Action': ['s3:GetBucketLocation', 's3:ListBucket'],
+                    'Resource': f'arn:aws:s3:::{bucket_name}',
                 },
                 {
-                    "Effect": "Allow",
-                    "Principal": {"AWS": "*"},
-                    "Action": "s3:GetObject",
-                    "Resource": f"arn:aws:s3:::{bucket_name}/*",
+                    'Effect': 'Allow',
+                    'Principal': {'AWS': '*'},
+                    'Action': 's3:GetObject',
+                    'Resource': f'arn:aws:s3:::{bucket_name}/*',
                 },
             ],
         }
@@ -57,9 +56,7 @@ def handle_bucket_init(bucket_name: str) -> None:
         MINIO_CLIENT.set_bucket_policy(bucket_name, get_bucket_policy(bucket_name))
 
 
-def put_minio_object(
-    data: bytes, bucket_name: str, object_id: str, content_type: str
-) -> Optional[str]:
+def put_minio_object(data: bytes, bucket_name: str, object_id: str, content_type: str) -> str | None:
     """
     Adds the raw data to MINIO.
 
@@ -75,10 +72,11 @@ def put_minio_object(
             length=buff_data.getbuffer().nbytes,
             content_type=content_type,
         )
-        return f'{MINIO_PUBLIC_URL}/{put_result.bucket_name}/{put_result.object_name}'
     except MaxRetryError:
-        logger.error("Max retry error when trying to add object to MINIO")
+        logger.exception('Max retry error when trying to add object to MINIO')
         return None
-    except MinioException as e:
-        logger.error(f"Minio Exception when trying to add object to MINIO: \n{e}")
+    except MinioException:
+        logger.exception('Minio Exception when trying to add object to MINIO')
         return None
+    else:
+        return f'{MINIO_PUBLIC_URL}/{put_result.bucket_name}/{put_result.object_name}'

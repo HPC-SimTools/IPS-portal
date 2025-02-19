@@ -4,13 +4,13 @@ import datetime
 import importlib.util
 import os
 import tarfile
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Dict, Iterable, List, Union
 
 THIS_DIR = Path(__file__).resolve().parent
 
 
-def get_data_from_runid(runid: int) -> Dict[float, List[str]]:
+def get_data_from_runid(runid: int) -> dict[float, list[str]]:
     """Load all data associated with a single runid into a dictionary.
 
     Params:
@@ -25,7 +25,7 @@ def get_data_from_runid(runid: int) -> Dict[float, List[str]]:
     return module.DATA_FILES  # type: ignore[no-any-return]
 
 
-def get_data_from_runids(runids: Iterable[int]) -> Dict[int, Dict[float, List[str]]]:
+def get_data_from_runids(runids: Iterable[int]) -> dict[int, dict[float, list[str]]]:
     """Load all data associated with multiple runids into a common data structure.
 
     Params:
@@ -37,7 +37,7 @@ def get_data_from_runids(runids: Iterable[int]) -> Dict[int, Dict[float, List[st
     return {runid: get_data_from_runid(runid) for runid in runids}
 
 
-def generate_tar_from_runids(runids: Union[Iterable[int], int]) -> str:
+def generate_tar_from_runids(runids: Iterable[int] | int) -> str:
     """
     Generate a tarball containing all data from the provided runs
 
@@ -47,7 +47,9 @@ def generate_tar_from_runids(runids: Union[Iterable[int], int]) -> str:
     Returns:
       - the absolute path of the tarball generated
     """
-    tarball_name = f'{datetime.datetime.now(datetime.timezone.utc).isoformat().replace(":", "-").replace("+", "_")}__ips_runs'
+    tarball_name = (
+        f'{datetime.datetime.now(datetime.timezone.utc).isoformat().replace(":", "-").replace("+", "_")}__ips_runs'
+    )
     tarball = THIS_DIR / f'{tarball_name}.tar.gz'
     with tarfile.open(tarball, 'w:gz') as archive:
         # add API files inside the tarball
