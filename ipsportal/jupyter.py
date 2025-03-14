@@ -14,14 +14,14 @@ from .environment import JUPYTERHUB_DIR, JUPYTERHUB_PORTAL_DIR
 logger = logging.getLogger(__name__)
 
 
-def _initialize_jupyterhub_dir(root_dir: Path) -> bool:
+def _initialize_jupyterhub_dir(root_dir: Path, runid: int) -> bool:
     """
     This is boilerplate which needs to happen the first time a JupyterHub workflow is initiated in a directory.
     """
     # TODO need to figure how to do authorization per-user
     try:
         os.makedirs(root_dir / 'data', exist_ok=True)
-        initialize_jupyter_import_module_file(root_dir)
+        initialize_jupyter_import_module_file(root_dir, runid)
         initialize_jupyter_python_api(root_dir.parent)
     except OSError as e:
         logger.warning(
@@ -34,11 +34,11 @@ def _initialize_jupyterhub_dir(root_dir: Path) -> bool:
 
 def add_jupyter_notebook(runid: int, username: str, notebook_name: str, data: bytes) -> tuple[str, int]:
     root_dir = JUPYTERHUB_PORTAL_DIR / username / str(runid)
-    if not root_dir.exists() and not _initialize_jupyterhub_dir(root_dir):
+    if not root_dir.exists() and not _initialize_jupyterhub_dir(root_dir, runid):
         return ('Server screwed up', 500)
 
     try:
-        initialize_jupyter_notebook(data, root_dir / notebook_name)
+        initialize_jupyter_notebook(data, root_dir / notebook_name, runid)
     except Exception:  # noqa: BLE001
         return ('Notebook was not valid', 400)
     # Return the fully qualified URL
@@ -51,7 +51,7 @@ def add_analysis_data_file_for_timestep(
     runid: int, username: str, filename: str, data: bytes, timestamp: float = 0.0, replace: bool = False
 ) -> tuple[str, int]:
     root_dir = JUPYTERHUB_PORTAL_DIR / username / str(runid)
-    if not root_dir.exists() and not _initialize_jupyterhub_dir(root_dir):
+    if not root_dir.exists() and not _initialize_jupyterhub_dir(root_dir, runid):
         return ('Server screwed up', 500)
 
     data_file_loc = root_dir / 'data' / filename
@@ -62,7 +62,7 @@ def add_analysis_data_file_for_timestep(
         f.write(data)
 
     try:
-        update_module_file_with_data_files(root_dir, filename, replace, timestamp)
+        update_module_file_with_data_files(root_dir, runid, filename, replace, timestamp)
     except Exception:
         logger.exception('Unable to update module file with the data files')
         return ("Server couldn't update module file", 500)

@@ -1,11 +1,16 @@
 """This file is meant to be directly imported and utilized in the Jupyter analysis stage when comparing multiple runs."""
 
+from __future__ import annotations
+
 import datetime
 import importlib.util
 import os
 import tarfile
-from collections.abc import Iterable
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 THIS_DIR = Path(__file__).resolve().parent
 
@@ -19,7 +24,9 @@ def get_data_from_runid(runid: int) -> dict[float, list[str]]:
     Returns:
       - a dictionary mapping timesteps to associated data file paths.
     """
-    spec = importlib.util.spec_from_file_location('', f'{os.path.join(THIS_DIR, str(runid), "data_listing.py")}')
+    spec = importlib.util.spec_from_file_location(
+        '', f'{os.path.join(THIS_DIR, str(runid), f"portal_data_listing_{runid}.py")}'
+    )
     module = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
     spec.loader.exec_module(module)  # type: ignore[union-attr]
     return module.DATA_FILES  # type: ignore[no-any-return]

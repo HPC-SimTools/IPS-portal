@@ -22,7 +22,7 @@ import nbformat as nbf
 
 DIRECTORY_VARIABLE_NAME = 'DATA_DIR'
 DATA_VARIABLE_NAME = 'DATA_FILES'
-DATA_MODULE_NAME = 'data_listing'
+DATA_MODULE_NAME = 'portal_data_listing_'
 CURRENT_API_VERSION = 'v1'
 
 
@@ -126,7 +126,7 @@ def initialize_jupyter_python_api(jupyterhub_dir: Path) -> None:
         f.write(_jupyter_notebook_api_code())
 
 
-def initialize_jupyter_notebook(notebook_src: bytes, notebook_dest: Path) -> None:
+def initialize_jupyter_notebook(notebook_src: bytes, notebook_dest: Path, runid: int) -> None:
     """Create a new notebook from an old notebook, copying the result from 'src' to 'dest'.
 
     This adds an additional cell which will import the data files. The notebook should not be written again after this function.
@@ -147,9 +147,9 @@ Execute this cell again to use new data during the simulation.
         nbf.v4.new_code_cell(f"""
 import importlib
 
-import {DATA_MODULE_NAME}
-importlib.reload({DATA_MODULE_NAME})
-{DATA_VARIABLE_NAME} = {DATA_MODULE_NAME}.{DATA_VARIABLE_NAME}
+import {DATA_MODULE_NAME}{runid}
+importlib.reload({DATA_MODULE_NAME}{runid})
+{DATA_VARIABLE_NAME} = {DATA_MODULE_NAME}{runid}.{DATA_VARIABLE_NAME}
 
 """),  # type: ignore[no-untyped-call]
     ] + nb['cells'][:]
@@ -159,18 +159,20 @@ importlib.reload({DATA_MODULE_NAME})
         nbf.write(nb, f)  # type: ignore[no-untyped-call]
 
 
-def initialize_jupyter_import_module_file(dest: Path) -> None:
+def initialize_jupyter_import_module_file(dest: Path, runid: int) -> None:
     """Create a new notebook from an old notebook, copying the result from 'src' to 'dest'.
 
     Params:
       - dest - directory where we will create the module file on filesystem (absolute file path)
     """
 
-    with open(dest / f'{DATA_MODULE_NAME}.py', 'w') as f:
+    with open(dest / f'{DATA_MODULE_NAME}{runid}.py', 'w') as f:
         f.write(_initial_data_file_code())
 
 
-def update_module_file_with_data_files(dest: Path, filename: str, replace: bool, timestamp: float = 0.0) -> None:
+def update_module_file_with_data_files(
+    dest: Path, runid: int, filename: str, replace: bool, timestamp: float = 0.0
+) -> None:
     """
     Params:
       - dest: directory of the module file which will be modified
@@ -181,7 +183,7 @@ def update_module_file_with_data_files(dest: Path, filename: str, replace: bool,
     Returns:
       - if we replaced a file, the name of the file which was replaced; otherwise, None
     """
-    module_file = dest / f'{DATA_MODULE_NAME}.py'
+    module_file = dest / f'{DATA_MODULE_NAME}{runid}.py'
     with open(module_file) as f:
         old_module_code = f.read()
 
