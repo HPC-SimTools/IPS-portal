@@ -15,6 +15,8 @@ bp = Blueprint('trace', __name__)
 @bp.route('/gettrace/<int:runid>')
 def gettrace(runid: int) -> tuple[str, int] | Response:
     portal_runid = get_portal_runid(runid)
+    if not portal_runid:
+        return 'No trace available', 500
     traceID = hashlib.md5(portal_runid.encode()).hexdigest()
 
     try:

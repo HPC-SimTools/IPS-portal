@@ -8,7 +8,9 @@ from ._jupyter.initializer import (
     initialize_jupyter_notebook,
     initialize_jupyter_python_api,
     update_module_file_with_data_files,
+    update_parent_module_file_with_child_runid,
 )
+from .db import get_parent_runid_by_child_runid
 from .environment import JUPYTERHUB_DIR, JUPYTERHUB_PORTAL_DIR
 
 logger = logging.getLogger(__name__)
@@ -23,6 +25,12 @@ def _initialize_jupyterhub_dir(root_dir: Path, runid: int) -> bool:
         os.makedirs(root_dir / 'data', exist_ok=True)
         initialize_jupyter_import_module_file(root_dir, runid)
         initialize_jupyter_python_api(root_dir.parent)
+        parent_portal_runid = get_parent_runid_by_child_runid(runid)
+        if parent_portal_runid:
+            update_parent_module_file_with_child_runid(
+                root_dir.parent / str(parent_portal_runid), parent_portal_runid, runid
+            )
+
     except OSError as e:
         logger.warning(
             'Could not make directories with provided JUPYTERHUB_DIR value "%s", full error: %s', root_dir, e

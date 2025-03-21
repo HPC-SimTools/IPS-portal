@@ -159,21 +159,21 @@ def update_run(db_filter: dict[str, Any], update: dict[str, Any]) -> Any:
     return db.runs.update_one(db_filter, update)
 
 
-def get_runid(portal_runid: str) -> Any:
+def get_runid(portal_runid: str) -> int | None:
     result = db.runs.find_one(filter={'portal_runid': portal_runid}, projection={'runid': True, '_id': False})
     if result:
         return result.get('runid')
     return None
 
 
-def get_portal_runid(runid: int) -> Any:
+def get_portal_runid(runid: int) -> str | None:
     result = db.runs.find_one(filter={'runid': runid}, projection={'portal_runid': True, '_id': False})
     if result:
         return result.get('portal_runid')
     return None
 
 
-def get_parent_portal_runid(portal_runid: str) -> Any:
+def get_parent_portal_runid(portal_runid: str) -> str | None:
     result = db.runs.find_one(
         filter={'portal_runid': portal_runid}, projection={'parent_portal_runid': True, '_id': False}
     )
@@ -198,3 +198,18 @@ def get_data_information(runid: int) -> tuple[list[dict[str, Any]] | None, list[
     if result:
         return result.get('tags'), result.get('jupyter_urls')
     return None, None
+
+
+def get_parent_runid_by_child_runid(child_runid: int) -> int | None:
+    """Try to get a parent runid from the child runid.
+
+    If runid does not have a parent, return None
+    """
+    child_portal_runid_search = db.runs.find_one({'runid': child_runid}, {'parent_portal_runid': True, '_id': False})
+    if not child_portal_runid_search:
+        return None
+    parent_portal_runid = child_portal_runid_search.get('parent_portal_runid')
+    if not parent_portal_runid:
+        return None
+
+    return get_runid(parent_portal_runid)

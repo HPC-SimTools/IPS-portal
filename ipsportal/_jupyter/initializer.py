@@ -14,16 +14,22 @@ To see available libraries on NERSC, run:
 ...in a shell on Jupyter NERSC.
 """
 
+import logging
 import re
 import shutil
 from pathlib import Path
 
 import nbformat as nbf
 
+_logger = logging.getLogger(__name__)
+
 DIRECTORY_VARIABLE_NAME = 'DATA_DIR'
 DATA_VARIABLE_NAME = 'DATA_FILES'
+CHILD_RUNS_VARIABLE_NAME = 'CHILD_RUNS'
 DATA_MODULE_NAME = 'portal_data_listing_'
 CURRENT_API_VERSION = 'v1'
+
+CHILD_RUNS_REGEX = re.compile(f'{CHILD_RUNS_VARIABLE_NAME}(.*?)\\]', re.DOTALL)
 
 
 def replace_last(source_string: str, old: str, new: str) -> str:
@@ -36,12 +42,34 @@ def replace_last(source_string: str, old: str, new: str) -> str:
 
 
 def _initial_data_file_code() -> str:
-    return f"""# This file should be imported by a jupyter notebook or the generated API. DO NOT EDIT UNTIL IPS RUN IS FINALIZED.
+    return f"""# This file should be imported by a jupyter notebook or the generated API. DO NOT EDIT UNTIL IPS RUN IS FINALIZED. It is highly recommended you do NOT further edit this file.
 
 import os
 import pathlib
+import sys
 
 {DIRECTORY_VARIABLE_NAME} = str(pathlib.Path(__file__).resolve().parent / 'data') + os.path.sep
+{CHILD_RUNS_VARIABLE_NAME} = [
+]
+
+def ips_get_child_run_data():
+    import importlib.util
+
+    modname = 'api_{CURRENT_API_VERSION}'
+    fname = str(pathlib.Path(__file__).parents[1] / f'{{modname}}.py')
+
+    spec = importlib.util.spec_from_file_location(modname, fname)
+    if spec is None:
+        raise ImportError("Could not load spec for module '{{modname}}' at: {{fname}}")
+    module = importlib.util.module_from_spec(spec)
+    #sys.modules[modname] = module
+    try:
+        spec.loader.exec_module(module)
+    except FileNotFoundError as e:
+        raise ImportError(f"{{e.strerror}}: {{fname}}") from e
+
+    return module.get_data_from_runids({CHILD_RUNS_VARIABLE_NAME})
+
 {DATA_VARIABLE_NAME} = {{
 }}
 """
@@ -151,6 +179,8 @@ import {DATA_MODULE_NAME}{runid}
 importlib.reload({DATA_MODULE_NAME}{runid})
 {DATA_VARIABLE_NAME} = {DATA_MODULE_NAME}{runid}.{DATA_VARIABLE_NAME}
 
+ips_get_child_run_data = {DATA_MODULE_NAME}{runid}.ips_get_child_run_data
+
 """),  # type: ignore[no-untyped-call]
     ] + nb['cells'][:]
 
@@ -180,8 +210,6 @@ def update_module_file_with_data_files(
       - replace: if True, we can update
       - timestamp: key we associate the data file with
 
-    Returns:
-      - if we replaced a file, the name of the file which was replaced; otherwise, None
     """
     module_file = dest / f'{DATA_MODULE_NAME}{runid}.py'
     with open(module_file) as f:
@@ -207,5 +235,36 @@ def update_module_file_with_data_files(
         # need to add new timestamp dictionary key
         new_module_code = replace_last(old_module_code, '}', new_str + '}')
 
+    with open(module_file, 'w') as f:
+        f.write(new_module_code)
+
+
+def update_parent_module_file_with_child_runid(dest: Path, parent_runid: int, child_runid: int) -> None:
+    module_file = dest / f'{DATA_MODULE_NAME}{parent_runid}.py'
+    try:
+        with open(module_file) as f:
+            old_module_code = f.read()
+    except OSError:
+        _logger.exception('Module file for id %s may be missing', parent_runid)
+        return
+
+    # TODO this should generally work except in the event of people adding comments inside of the array variable
+    found_match = CHILD_RUNS_REGEX.search(old_module_code)
+
+    # failsafe, this should exist unless user modified file manually
+    if not found_match:
+        return
+
+    result = found_match.group(0)
+    # this regex should be much safer, it is unlikely that the child runid will already exist in the first match
+    found_number_pattern = f'[^0-9]{child_runid}[^0-9]'
+    found_number_search = re.search(found_number_pattern, result, re.MULTILINE)
+
+    if found_number_search:
+        # runid already exists
+        return
+
+    new_str = f'{result[:-1]}{child_runid},\n]'
+    new_module_code = old_module_code.replace(result, new_str, 1)
     with open(module_file, 'w') as f:
         f.write(new_module_code)
