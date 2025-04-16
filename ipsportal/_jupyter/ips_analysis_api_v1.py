@@ -20,7 +20,7 @@ IPS_DATA_LIST_FILE = 'ips_analysis_api_data_listing.json'
 IPS_CHILD_RUNS_FILE = 'ips_analysis_api_child_runs.txt'
 
 
-class IpsAnalysisApi:
+class IPSAnalysisApi:
     """This class should get used directly by notebooks directly associated with a run.
 
     The IPS Portal will insert a new code cell prior to your actual cells; this cell will initialize the `ips_analysis_api` object, an instance of this class.
