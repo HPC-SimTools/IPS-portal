@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import logging
+import os
+import re
 
 from flask import Blueprint, Response, jsonify, request
 from pymongo.errors import PyMongoError
@@ -8,8 +10,12 @@ from pymongo.errors import PyMongoError
 from .db import db
 from .environment import SECRET_API_KEY
 from .jupyter import add_analysis_data_file_for_timestep, add_jupyter_notebook
+from .util import is_valid_filename
 
 logger = logging.getLogger(__name__)
+
+VALID_USERNAME_REGEX = re.compile('^[a-z0-9_]+$')
+"""This is the username regex on NERSC, and is probably a good one to use in general."""
 
 bp = Blueprint('data', __name__)
 
@@ -133,10 +139,18 @@ def add_notebook() -> tuple[Response, int]:
     username = request.headers.get('X-Ips-Username')
     if not username:
         return jsonify('Missing value for HTTP Header X-Ips-Username'), 400
+    if not VALID_USERNAME_REGEX.match(username):
+        return jsonify('Invalid username'), 400
 
     filename = request.headers.get('X-Ips-Filename')
     if not filename:
         return jsonify('Missing value for HTTP Header X-Ips-Filename'), 400
+    filename = os.path.basename(filename)
+    if not filename or not filename.endswith('.ipynb'):
+        return jsonify('Invalid jupyter notebook filename'), 400
+    if not is_valid_filename(filename[:-6]):
+        logger.warning('Invalid filename %s, ascii characters [%s]', filename, ', '.join(str(ord(i)) for i in filename))
+        return jsonify('Invalid jupyter notebook filename'), 400
 
     if not request.data:
         return jsonify('Missing request body'), 400
@@ -210,10 +224,18 @@ def add_data_file() -> tuple[Response, int]:
     username = request.headers.get('X-Ips-Username')
     if not username:
         return jsonify('Missing value for HTTP Header X-Ips-Username'), 400
+    if not VALID_USERNAME_REGEX.match(username):
+        return jsonify('Invalid username'), 400
 
     filename = request.headers.get('X-Ips-Filename')
     if not filename:
         return jsonify('Missing value for HTTP Header X-Ips-Filename'), 400
+    filename = os.path.basename(filename)
+    if not filename:
+        return jsonify('Invalid jupyter notebook filename'), 400
+    if not is_valid_filename(filename):
+        logger.warning('Invalid filename %s, ascii characters [%s]', filename, ', '.join(str(ord(i)) for i in filename))
+        return jsonify('Invalid jupyter notebook filename'), 400
 
     if not request.data:
         return jsonify('Missing request body'), 400

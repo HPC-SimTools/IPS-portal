@@ -64,8 +64,12 @@ def add_analysis_data_file_for_timestep(
     if not replace and Path.exists(data_file_loc):
         return ('Replace flag was not set but file already exists', 400)
 
-    with open(data_file_loc, 'wb') as f:
-        f.write(data)
+    try:
+        with open(data_file_loc, 'wb') as f:
+            f.write(data)
+    except Exception:
+        logger.exception("Couldn't write file")
+        return ("Couldn't write file", 500)
 
     try:
         update_data_listing_file(root_dir, filename, timestamp)
