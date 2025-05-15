@@ -17,7 +17,7 @@ Properties we allow sort queries on for the runs table.
 THIS MUST MATCH THE CLIENT SIDE CONFIGURATION.
 """
 
-VALID_FILENAME_REGEX = re.compile('^[a-zA-Z0-9._-]+$')
+VALID_FILENAME_REGEX = re.compile('^[a-zA-Z0-9._#%+-]+$')
 
 
 # based on https://stackoverflow.com/a/31976060

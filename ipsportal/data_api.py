@@ -232,10 +232,10 @@ def add_data_file() -> tuple[Response, int]:
         return jsonify('Missing value for HTTP Header X-Ips-Filename'), 400
     filename = os.path.basename(filename)
     if not filename:
-        return jsonify('Invalid jupyter notebook filename'), 400
+        return jsonify('Invalid filename'), 400
     if not is_valid_filename(filename):
         logger.warning('Invalid filename %s, ascii characters [%s]', filename, ', '.join(str(ord(i)) for i in filename))
-        return jsonify('Invalid jupyter notebook filename'), 400
+        return jsonify('Invalid filename, only alphanumerics, dot, hyphen, underscore, and %+# allowed'), 400
 
     if not request.data:
         return jsonify('Missing request body'), 400
