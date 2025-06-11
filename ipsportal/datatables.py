@@ -32,7 +32,7 @@ def _parse_sort_arguments(request: dict[str, Any], allowed_props: list[str]) -> 
         DataTables queries this API, but may be raised if the API is used directly elsewhere.
     """
     sort_dict: dict[str, int] = {}
-    columns: list[Any] = request.get('columns', None)  # noqa: SIM910
+    columns: list[Any] | None = request.get('columns', None)  # noqa: SIM910
     if not isinstance(columns, list):
         prop = 'columns'
         raise SortParamError(prop, 'must be an array')
