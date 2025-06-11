@@ -8,6 +8,9 @@ from ipsportal import trace_jaeger
 
 from .environment import SECRET_API_KEY
 
+# overwrite default umask for file permissions: allow for group writes and disallow all world interactions
+os.umask(7)
+
 
 def create_app(test_config: Mapping[str, Any] | None = None) -> Flask:
     # create and configure the app
