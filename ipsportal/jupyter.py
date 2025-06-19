@@ -1,5 +1,7 @@
+import io
 import logging
 import os
+import tarfile
 from pathlib import Path
 
 from ._jupyter.hub_implementations import get_jupyter_url_prefix
@@ -54,7 +56,13 @@ def add_jupyter_notebook(runid: int, username: str, notebook_name: str, data: by
 
 
 def add_analysis_data_file_for_timestep(
-    runid: int, username: str, filename: str, data: bytes, timestamp: float = 0.0, replace: bool = False
+    runid: int,
+    username: str,
+    filename: str,
+    data: bytes,
+    timestamp: float = 0.0,
+    replace: bool = False,
+    archive_format: str = '',
 ) -> tuple[str, int]:
     root_dir = JUPYTERHUB_PORTAL_DIR / username / str(runid)
     if not root_dir.exists() and not _initialize_jupyterhub_dir(root_dir, runid):
@@ -64,12 +72,26 @@ def add_analysis_data_file_for_timestep(
     if not replace and Path.exists(data_file_loc):
         return ('Replace flag was not set but file already exists', 400)
 
-    try:
-        with open(data_file_loc, 'wb') as f:
-            f.write(data)
-    except Exception:
-        logger.exception("Couldn't write file")
-        return ("Couldn't write file", 500)
+    if archive_format == 'tar':
+        try:
+            with tarfile.open(fileobj=io.BytesIO(data)) as tar:
+                for member in tar.getmembers():
+                    # make sure we don't have nonsense like "/etc/passwd" or "../etc/passwd"
+                    # "filename" should already be validated as a safe path by checking its basename prior to this function call
+                    if not member.name.startswith(filename):
+                        logger.error('%s is an invalid archive name for %s', member.name, filename)
+                        return ('Tarball name mismatch', 400)
+                    tar.extract(member=member, path=data_file_loc.parent)
+        except Exception:
+            logger.exception("Couldn't extract tar")
+            return ("Couldn't extract tar", 500)
+    else:
+        try:
+            with open(data_file_loc, 'wb') as f:
+                f.write(data)
+        except Exception:
+            logger.exception("Couldn't write file")
+            return ("Couldn't write file", 500)
 
     try:
         update_data_listing_file(root_dir, filename, timestamp)

@@ -167,12 +167,12 @@ ips_analysis_api = _ips_analysis_api()
 
 def _initialize_child_runs_file(dest: Path) -> None:
     child_runs_file = dest / IPS_CHILD_RUNS_FILE
-    child_runs_file.touch(mode=0o660, exist_ok=True)
+    child_runs_file.touch(exist_ok=True)
 
 
 def _initialize_jupyter_data_list_file(dest: Path) -> None:
     data_file = dest / IPS_DATA_LIST_FILE
-    data_file.touch(mode=0o660, exist_ok=True)
+    data_file.touch(exist_ok=True)
     # generate an empty dictionary to guarantee that we have valid JSON
     with open(data_file, 'w') as f:
         f.write('{\n}\n')

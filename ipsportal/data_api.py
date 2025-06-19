@@ -262,5 +262,9 @@ def add_data_file() -> tuple[Response, int]:
     # if runid is None:
     # return jsonify("Invalid value for HTTP Header X-Ips-Portal-Runid"), 400
 
-    result = add_analysis_data_file_for_timestep(runid, username, filename, request.data, timestep, replace)
+    archive_format = request.headers.get('X-Ips-Archive-Format', '')
+
+    result = add_analysis_data_file_for_timestep(
+        runid, username, filename, request.data, timestep, replace, archive_format
+    )
     return jsonify(result[0]), result[1]
