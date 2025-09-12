@@ -9,7 +9,7 @@ from pymongo.errors import PyMongoError
 
 from .db import db
 from .environment import SECRET_API_KEY
-from .jupyter import add_analysis_data_file_for_timestep, add_jupyter_notebook
+from .jupyter import add_analysis_data_file_for_timestep, add_ensemble_file, add_jupyter_notebook
 from .util import is_valid_filename
 
 logger = logging.getLogger(__name__)
@@ -258,13 +258,48 @@ def add_data_file() -> tuple[Response, int]:
         runid = int(portal_runid)
     except ValueError:
         return jsonify('Invalid value for HTTP Header X-Ips-Portal-Runid'), 400
-    # runid = get_runid(portal_runid)
-    # if runid is None:
-    # return jsonify("Invalid value for HTTP Header X-Ips-Portal-Runid"), 400
 
     archive_format = request.headers.get('X-Ips-Archive-Format', '')
 
     result = add_analysis_data_file_for_timestep(
         runid, username, filename, request.data, timestep, replace, archive_format
+    )
+    return jsonify(result[0]), result[1]
+
+
+@bp.route('/api/data/add_ensemble_variables', methods=['POST'])
+def add_ensemble_variables() -> tuple[Response, int]:
+    # TODO: later on need to implement real Authentication/Authorization
+    api_key = request.headers.get('X-Api-Key')
+    if api_key != SECRET_API_KEY:
+        return jsonify(message='Authorization failed'), 401
+
+    if request.headers.get('Content-Type') != 'application/json':
+        return jsonify("Content-Type HTTP header value must be 'application/json'"), 415
+
+    username = request.headers.get('X-Ips-Username')
+    if not username:
+        return jsonify('Missing value for HTTP Header X-Ips-Username'), 400
+    if not VALID_USERNAME_REGEX.match(username):
+        return jsonify('Invalid username'), 400
+
+    portal_runid = request.headers.get('X-Ips-Portal-Runid')
+    if not portal_runid:
+        return jsonify('Missing value for HTTP Header X-Ips-Portal-Runid'), 400
+
+    try:
+        runid = int(portal_runid)
+    except ValueError:
+        return jsonify('Invalid value for HTTP Header X-Ips-Portal-Runid'), 400
+
+    ensemble_name = request.headers.get('X-Ips-Ensemble-Name')
+    if not ensemble_name:
+        return jsonify('Missing value for HTTP Header X-Ips-Ensemble-Name'), 400
+
+    result = add_ensemble_file(
+        runid,
+        username,
+        ensemble_name,
+        request.json,
     )
     return jsonify(result[0]), result[1]

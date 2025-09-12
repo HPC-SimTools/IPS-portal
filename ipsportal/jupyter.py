@@ -1,8 +1,10 @@
 import io
+import json
 import logging
 import os
 import tarfile
 from pathlib import Path
+from typing import Any
 
 from ._jupyter.hub_implementations import get_jupyter_url_prefix
 from ._jupyter.initializer import (
@@ -25,6 +27,7 @@ def _initialize_jupyterhub_dir(root_dir: Path, runid: int) -> bool:
     # TODO need to figure how to do authorization per-user
     try:
         os.makedirs(root_dir / 'data', exist_ok=True)
+        os.makedirs(root_dir / 'ensembles', exist_ok=True)
         initialize_jupyter_python_api(root_dir.parent)
         initialize_jupyter_data_files(root_dir)
         parent_portal_runid = get_parent_runid_by_child_runid(runid)
@@ -100,3 +103,23 @@ def add_analysis_data_file_for_timestep(
         return ("Server couldn't update module file", 500)
 
     return ('Created', 201)
+
+
+def add_ensemble_file(
+    runid: int,
+    username: str,
+    ensemble_name: str,
+    data: Any,
+) -> tuple[str, int]:
+    root_dir = JUPYTERHUB_PORTAL_DIR / username / str(runid)
+    if not root_dir.exists() and not _initialize_jupyterhub_dir(root_dir, runid):
+        return ('Server screwed up', 500)
+
+    ensemble_path = root_dir / 'ensembles' / f'{ensemble_name}.json'
+    try:
+        with open(ensemble_path, 'w') as f:
+            json.dump(data, f, indent=2)
+    except Exception:
+        logger.exception('Unable to write ensemble json file %s', ensemble_path)
+        return f"Server couldn't save ensemble file {ensemble_name}", 500
+    return 'Created', 201
