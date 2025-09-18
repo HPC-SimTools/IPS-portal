@@ -274,8 +274,8 @@ def add_ensemble_variables() -> tuple[Response, int]:
     if api_key != SECRET_API_KEY:
         return jsonify(message='Authorization failed'), 401
 
-    if request.headers.get('Content-Type') != 'application/json':
-        return jsonify("Content-Type HTTP header value must be 'application/json'"), 415
+    if request.headers.get('Content-Type') != 'text/csv':
+        return jsonify("Content-Type HTTP header value must be 'text/csv'"), 415
 
     username = request.headers.get('X-Ips-Username')
     if not username:
@@ -300,6 +300,6 @@ def add_ensemble_variables() -> tuple[Response, int]:
         runid,
         username,
         ensemble_name,
-        request.json,
+        request.data,
     )
     return jsonify(result[0]), result[1]

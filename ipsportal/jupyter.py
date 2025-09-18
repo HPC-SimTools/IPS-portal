@@ -1,10 +1,8 @@
 import io
-import json
 import logging
 import os
 import tarfile
 from pathlib import Path
-from typing import Any
 
 from ._jupyter.hub_implementations import get_jupyter_url_prefix
 from ._jupyter.initializer import (
@@ -109,16 +107,17 @@ def add_ensemble_file(
     runid: int,
     username: str,
     ensemble_name: str,
-    data: Any,
+    data: bytes,
 ) -> tuple[str, int]:
     root_dir = JUPYTERHUB_PORTAL_DIR / username / str(runid)
     if not root_dir.exists() and not _initialize_jupyterhub_dir(root_dir, runid):
         return ('Server screwed up', 500)
 
-    ensemble_path = root_dir / 'ensembles' / f'{ensemble_name}.json'
+    ensemble_path = root_dir / 'ensembles' / ensemble_name
+    # TODO do additional magic here
     try:
-        with open(ensemble_path, 'w') as f:
-            json.dump(data, f, indent=2)
+        with open(ensemble_path, 'wb') as f:
+            f.write(data)
     except Exception:
         logger.exception('Unable to write ensemble json file %s', ensemble_path)
         return f"Server couldn't save ensemble file {ensemble_name}", 500
