@@ -12,6 +12,7 @@ from flask import Blueprint, Response, current_app, json, jsonify, request
 from ipsportal.datatables import get_datatables_results
 from ipsportal.db import (
     add_run,
+    get_ensembles,
     get_events,
     get_parent_portal_runid,
     get_portal_runid,
@@ -22,6 +23,7 @@ from ipsportal.db import (
     next_runid,
     update_run,
 )
+from ipsportal.ensemble import update_ensemble_information
 
 # from ipsportal.environment import SECRET_API_KEY
 from ipsportal.trace_jaeger import send_trace
@@ -169,6 +171,7 @@ def event() -> tuple[Response, int]:
             'ok',
             'walltime',
             'parent_portal_runid',
+            'portal_ensemble_id',
             'vizurl',
         }
 
@@ -188,9 +191,34 @@ def event() -> tuple[Response, int]:
             run_dict['has_trace'] = False
             try:
                 add_run(run_dict)
+                # if this is an ensemble run, we need to update its parent
+                if run_dict['portal_ensemble_id'] and run_dict['parent_portal_runid'] and run_dict['simname']:
+                    ensembles = get_ensembles(run_dict['parent_portal_runid'], run_dict['portal_ensemble_id'])
+                    if not ensembles:
+                        errors.append('Could not update parent ensemble information')
+                        current_app.logger.error(
+                            'Could not update parent ensemble information for %s %s',
+                            run_dict['parent_portal_runid'],
+                            run_dict['simname'],
+                        )
+                    else:
+                        update_ensemble_information(
+                            runid,
+                            request.root_url.rstrip('/'),
+                            run_dict['simname'],
+                            run_dict['user'],
+                            ensembles[0]['path'],
+                        )
+            except FileNotFoundError:
+                current_app.logger.exception('no file for %s', run_dict['parent_portal_runid'])
+                errors.append('could not update ensemble file')
+                continue
             except pymongo.errors.DuplicateKeyError:
                 current_app.logger.exception('Duplicate Key %s', run_dict)
                 errors.append('Duplicate portal_runid Key')
+                continue
+            except Exception:
+                current_app.logger.exception('unknown IPS_START exception')
                 continue
             successes += 1
             output['message'] = 'New run created and ' + output['message']

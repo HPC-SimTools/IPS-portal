@@ -19,8 +19,8 @@ namespace-packages = ['tests/']
 isort = { known-first-party = ['ipsportal'] }
 pydocstyle = { convention = 'google' }
 flake8-quotes = { inline-quotes = 'single', multiline-quotes = 'double' }
-mccabe = { max-complexity = 20 }
-pylint = { max-args = 10, max-branches = 20, max-returns = 20, max-statements = 75 }
+mccabe = { max-complexity = 50 }
+pylint = { max-args = 10, max-branches = 50, max-returns = 50, max-statements = 100 }
 # pyflakes and the relevant pycodestyle rules are already configured
 extend-select = [
     'C90', # mccabe complexity

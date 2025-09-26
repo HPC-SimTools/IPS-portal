@@ -269,6 +269,27 @@ def add_data_file() -> tuple[Response, int]:
 
 @bp.route('/api/data/add_ensemble_variables', methods=['POST'])
 def add_ensemble_variables() -> tuple[Response, int]:
+    """
+    Add a data file to the filesystem and the module file.
+
+    Required Parameters:
+    - X-Api-Key - auth
+    - X-Ips-Username - username
+    - X-Ips-Portal-Runid - portal runid, this must already exist
+    - X-Ips-Ensemble-Id - ID associated with a specific ensemble run (all ensemble children should post this)
+    - X-Ips-Sim-Name - the name of the simulation
+
+    request body = the data file itself, in bytes
+
+    Optional Parameters:
+    - X-Ips-Replace - leave value empty if additive, remove if replacing
+
+    The return value will be an array of data URL locations (JSONified). The response codes are:
+    - 500 - server screwed up
+    - 401 - unauthorized
+    - 400 - missing some important metadata in the headers, or parameter validation error
+    - 201 - all went well, created
+    """
     # TODO: later on need to implement real Authentication/Authorization
     api_key = request.headers.get('X-Api-Key')
     if api_key != SECRET_API_KEY:
@@ -292,6 +313,10 @@ def add_ensemble_variables() -> tuple[Response, int]:
     except ValueError:
         return jsonify('Invalid value for HTTP Header X-Ips-Portal-Runid'), 400
 
+    ensemble_id = request.headers.get('X-Ips-Ensemble-Id')
+    if not ensemble_id:
+        return jsonify('Missing value for HTTP Header X-Ips-Ensemble-Id'), 400
+
     ensemble_name = request.headers.get('X-Ips-Ensemble-Name')
     if not ensemble_name:
         return jsonify('Missing value for HTTP Header X-Ips-Ensemble-Name'), 400
@@ -300,6 +325,7 @@ def add_ensemble_variables() -> tuple[Response, int]:
         runid,
         username,
         ensemble_name,
+        ensemble_id,
         request.data,
     )
     return jsonify(result[0]), result[1]

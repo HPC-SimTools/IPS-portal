@@ -12,7 +12,8 @@ from ._jupyter.initializer import (
     update_data_listing_file,
     update_parent_module_file_with_child_runid,
 )
-from .db import get_parent_runid_by_child_runid
+from .db import get_parent_runid_by_child_runid, save_ensemble_file_path
+from .ensemble import save_initial_csv
 from .environment import JUPYTERHUB_DIR, JUPYTERHUB_PORTAL_DIR
 
 logger = logging.getLogger(__name__)
@@ -107,18 +108,19 @@ def add_ensemble_file(
     runid: int,
     username: str,
     ensemble_name: str,
+    ensemble_id: str,
     data: bytes,
 ) -> tuple[str, int]:
     root_dir = JUPYTERHUB_PORTAL_DIR / username / str(runid)
     if not root_dir.exists() and not _initialize_jupyterhub_dir(root_dir, runid):
         return ('Server screwed up', 500)
 
-    ensemble_path = root_dir / 'ensembles' / ensemble_name
+    ensemble_path = root_dir / 'ensembles' / f'{ensemble_name}.csv'
     # TODO do additional magic here
     try:
-        with open(ensemble_path, 'wb') as f:
-            f.write(data)
+        save_initial_csv(data, ensemble_path)
+        save_ensemble_file_path(runid, ensemble_id, str(ensemble_path))
     except Exception:
-        logger.exception('Unable to write ensemble json file %s', ensemble_path)
+        logger.exception('Unable to write ensemble CSV file %s', ensemble_path)
         return f"Server couldn't save ensemble file {ensemble_name}", 500
     return 'Created', 201

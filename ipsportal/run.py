@@ -21,7 +21,7 @@ def run(runid: int) -> tuple[str, int]:
         run['parent_runid'] = get_runid(str(run.get('parent_portal_runid')))
     else:
         run['parent_runid'] = None
-    data_info, jupyter_urls = get_data_information(runid)
+    data_info, jupyter_urls, ensemble_paths = get_data_information(runid)
     if jupyter_urls:
         resolved_jupyter_urls = [[jupyter_url, parse_url(jupyter_url).host] for jupyter_url in jupyter_urls]
     else:

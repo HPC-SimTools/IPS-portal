@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, TypedDict
 
 from flask import Flask, g
 from pymongo import ASCENDING, DESCENDING, MongoClient
@@ -6,6 +6,18 @@ from pymongo.database import Database
 from werkzeug.local import LocalProxy
 
 from .environment import MONGO_HOST, MONGO_PASSWORD, MONGO_PORT, MONGO_USERNAME
+
+
+class EnsembleInformation(TypedDict):
+    """A run can store a list of ensembles associated with it."""
+
+    ensemble_id: str
+    """This should be unique within the runs DB. This is sent by the parent when adding ensemble information, this is sent with child ensembles when actually saving them.
+
+    Ensemble ids should be unique throughout the entire application.
+    """
+    path: str
+    """The path to the flat-file which stores the ensemble data"""
 
 
 def get_db() -> Database[dict[str, Any]]:
@@ -193,11 +205,29 @@ def get_data_tags(portal_runid: str) -> dict[str, Any] | None:
     return None
 
 
-def get_data_information(runid: int) -> tuple[list[dict[str, Any]] | None, list[str] | None]:
-    result = db.data.find_one({'runid': runid}, projection={'_id': False, 'tags': True, 'jupyter_urls': True})
+def get_data_information(
+    runid: int,
+) -> tuple[list[dict[str, Any]] | None, list[str] | None, list[EnsembleInformation] | None]:
+    result = db.data.find_one(
+        {'runid': runid}, projection={'_id': False, 'tags': True, 'jupyter_urls': True, 'ensembles': True}
+    )
     if result:
-        return result.get('tags'), result.get('jupyter_urls')
-    return None, None
+        return result.get('tags'), result.get('jupyter_urls'), result.get('ensembles')
+    return None, None, None
+
+
+def get_ensembles(runid: int, ensemble_id: str | None = None) -> list[EnsembleInformation] | None:
+    db_filter: dict[str, Any] = {'runid': runid}
+    if ensemble_id:
+        db_filter['ensembles'] = {
+            '$elemMatch': {
+                'ensemble_id': ensemble_id,
+            }
+        }
+    result = db.data.find_one(db_filter, projection={'_id': False, 'ensembles': True})
+    if result:
+        return result.get('ensembles')
+    return None
 
 
 def get_parent_runid_by_child_runid(child_runid: int) -> int | None:
@@ -213,3 +243,23 @@ def get_parent_runid_by_child_runid(child_runid: int) -> int | None:
         return None
 
     return get_runid(parent_portal_runid)
+
+
+def save_ensemble_file_path(runid: int, ensemble_id: str, path: str) -> None:
+    """The ensemble runner adds ensemble information.
+
+    - runid: the ID of the run itself (the "parent")
+    - ensemble_id: the ID of the ensemble we're tracking. This is tracked in child events
+    - path: where we are saving the CSV to
+    """
+    db.data.update_one(
+        {'runid': runid},
+        {
+            '$push': {
+                'ensembles': {
+                    'ensemble_id': ensemble_id,
+                    'path': path,
+                }
+            }
+        },
+    )
