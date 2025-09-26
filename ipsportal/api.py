@@ -192,7 +192,12 @@ def event() -> tuple[Response, int]:
             try:
                 add_run(run_dict)
                 # if this is an ensemble run, we need to update its parent
-                if run_dict['portal_ensemble_id'] and run_dict['parent_portal_runid'] and run_dict['simname']:
+                if (
+                    'portal_ensemble_id' in run_dict
+                    and 'parent_portal_runid' in run_dict
+                    and 'simname' in run_dict
+                    and 'user' in run_dict
+                ):
                     ensembles = get_ensembles(run_dict['parent_portal_runid'], run_dict['portal_ensemble_id'])
                     if not ensembles:
                         errors.append('Could not update parent ensemble information')
