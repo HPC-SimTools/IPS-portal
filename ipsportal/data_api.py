@@ -276,6 +276,7 @@ def add_ensemble_variables() -> tuple[Response, int]:
     - X-Api-Key - auth
     - X-Ips-Username - username
     - X-Ips-Portal-Runid - portal runid, this must already exist
+    - X-Ips-Component-Name - name of the component
     - X-Ips-Ensemble-Id - ID associated with a specific ensemble run (all ensemble children should post this)
     - X-Ips-Sim-Name - the name of the simulation
 
@@ -313,6 +314,10 @@ def add_ensemble_variables() -> tuple[Response, int]:
     except ValueError:
         return jsonify('Invalid value for HTTP Header X-Ips-Portal-Runid'), 400
 
+    component_name = request.headers.get('X-Ips-Component-Name')
+    if not component_name:
+        return jsonify('Missing value for HTTP Header X-Ips-Component-Name'), 400
+
     ensemble_id = request.headers.get('X-Ips-Ensemble-Id')
     if not ensemble_id:
         return jsonify('Missing value for HTTP Header X-Ips-Ensemble-Id'), 400
@@ -325,6 +330,7 @@ def add_ensemble_variables() -> tuple[Response, int]:
         runid,
         username,
         ensemble_name,
+        component_name,
         ensemble_id,
         request.data,
     )

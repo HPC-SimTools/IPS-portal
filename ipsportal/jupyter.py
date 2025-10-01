@@ -45,6 +45,7 @@ def _initialize_jupyterhub_dir(root_dir: Path, runid: int) -> bool:
 def add_jupyter_notebook(runid: int, username: str, notebook_name: str, data: bytes) -> tuple[str, int]:
     root_dir = JUPYTERHUB_PORTAL_DIR / username / str(runid)
     if not root_dir.exists() and not _initialize_jupyterhub_dir(root_dir, runid):
+        logger.error("add_jupyter_notebook: couldn't initialize directory %s", root_dir)
         return ('Server screwed up', 500)
 
     try:
@@ -68,6 +69,7 @@ def add_analysis_data_file_for_timestep(
 ) -> tuple[str, int]:
     root_dir = JUPYTERHUB_PORTAL_DIR / username / str(runid)
     if not root_dir.exists() and not _initialize_jupyterhub_dir(root_dir, runid):
+        logger.error("add_analysis_data_file: couldn't initialize directory %s", root_dir)
         return ('Server screwed up', 500)
 
     data_file_loc = root_dir / 'data' / filename
@@ -108,19 +110,33 @@ def add_ensemble_file(
     runid: int,
     username: str,
     ensemble_name: str,
+    component_name: str,
     ensemble_id: str,
     data: bytes,
 ) -> tuple[str, int]:
+    """
+    This gets called to generate a CSV for a parent's ensembles
+
+    runid: parent's runid
+    username: username
+    ensemble_name: user-provided name of the ensemble, used to generate the file (should be unique per ensemble group)
+    component_name: user-provided name of the component, used to generate the filename (used to ensure that different components can reuse the same ensemble name)
+    ensemble_id: automatically-generated ID, used for lookups. Ensembles will advertise their ensemble IDs when they send events. This will be shared by all ensembles in an ensemble group, but should be unique otherwise.
+    data: raw CSV data that we will initially write
+    """
     root_dir = JUPYTERHUB_PORTAL_DIR / username / str(runid)
     if not root_dir.exists() and not _initialize_jupyterhub_dir(root_dir, runid):
+        logger.error("add_ensemble_file: couldn't initialize directory %s", root_dir)
         return ('Server screwed up', 500)
 
-    ensemble_path = root_dir / 'ensembles' / f'{ensemble_name}.csv'
-    # TODO do additional magic here
+    ensemble_path = root_dir / 'ensembles' / f'{component_name}_{ensemble_name}.csv'
     try:
         save_initial_csv(data, ensemble_path)
         save_ensemble_file_path(runid, ensemble_id, str(ensemble_path))
     except Exception:
         logger.exception('Unable to write ensemble CSV file %s', ensemble_path)
-        return f"Server couldn't save ensemble file {ensemble_name}", 500
+        return (
+            f"Server couldn't save ensemble file {ensemble_name} of component {component_name} with runid {runid}",
+            500,
+        )
     return 'Created', 201
