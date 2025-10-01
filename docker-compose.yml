@@ -8,7 +8,7 @@ services:
       - 27017:27017
 
   minio:
-    image: "bitnami/minio:2024.6.4"
+    image: "bitnami/minio:latest"
     environment:
       # references: https://github.com/bitnami/containers/blob/main/bitnami/minio/README.md
       MINIO_ROOT_USER: AKIAIOSFODNN7EXAMPLE
