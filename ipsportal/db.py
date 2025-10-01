@@ -1,3 +1,4 @@
+import logging
 from typing import Any, TypedDict
 
 from flask import Flask, g
@@ -6,6 +7,8 @@ from pymongo.database import Database
 from werkzeug.local import LocalProxy
 
 from .environment import MONGO_HOST, MONGO_PASSWORD, MONGO_PORT, MONGO_USERNAME
+
+logger = logging.getLogger(__name__)
 
 
 class EnsembleInformation(TypedDict):
@@ -262,4 +265,5 @@ def save_ensemble_file_path(runid: int, ensemble_id: str, path: str) -> None:
                 }
             }
         },
+        upsert=True,
     )
