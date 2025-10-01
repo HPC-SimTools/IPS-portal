@@ -82,6 +82,7 @@ spec:
         envFrom:
         - secretRef:
             name: minio-secrets
+        args: ["server", "start"]
         securityContext:
           capabilities:
             add:
