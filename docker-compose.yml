@@ -2,7 +2,7 @@
 
 services:
   db:
-    image: mongo:6
+    image: mongo:8
     restart: unless-stopped
     ports:
       - 27017:27017
