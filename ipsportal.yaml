@@ -73,7 +73,7 @@ spec:
     spec:
       containers:
       - name: minio
-        image: "bitnami/minio:2024.6.4"
+        image: "minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1"
         env:
         - name: MINIO_SERVER_URL
           value: "https://data.ipsportal.development.svc.spin.nersc.org/"
@@ -93,7 +93,7 @@ spec:
             drop:
             - ALL
         volumeMounts:
-        - mountPath: /bitnami/minio/data
+        - mountPath: /data
           name: minio
       volumes:
       - name: minio
@@ -219,7 +219,7 @@ spec:
         - hostPath:
             path: /global/cfs/cdirs/atom/users/ipsportal/ipsportal-runs-development
             type: Directory
-          name: jupyterhub-data-files        
+          name: jupyterhub-data-files
 
 ---
 kind: Deployment
@@ -637,14 +637,14 @@ spec:
       - backend:
           service:
             name: minio
-            port: 
+            port:
               number: 9000
         path: /
         pathType: Prefix
       - backend:
           service:
             name: minio
-            port: 
+            port:
               number: 9001
         path: /console/
         pathType: Prefix
@@ -796,4 +796,3 @@ spec:
     targetPort: 80
   selector:
     app: ipsportal-certbot-nginx-data
-
