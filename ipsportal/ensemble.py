@@ -1,4 +1,5 @@
 import csv
+import logging
 import os
 import shutil
 from io import StringIO
@@ -6,6 +7,8 @@ from tempfile import NamedTemporaryFile
 from typing import Any
 
 from ._jupyter.hub_implementations import get_jupyter_url_prefix
+
+logger = logging.getLogger(__name__)
 
 
 def save_initial_csv(initial_csv: bytes, path: str | os.PathLike[Any]) -> None:
@@ -15,6 +18,12 @@ def save_initial_csv(initial_csv: bytes, path: str | os.PathLike[Any]) -> None:
     data[0] = ['portal_runid', 'run_url', 'instance_analysis_url', *data[0]]
     for i in range(1, len(data)):
         data[i] = ['?', '?', '?', *data[i]]
+
+    # TODO this path should be created earlier...
+    dirname = os.path.dirname(path)
+    if not os.path.exists(dirname):
+        logger.warning('needed to create %s, this should not happen here', dirname)
+        os.makedirs(path, exist_ok=True)
 
     with open(path, 'w', newline='') as fd:
         writer = csv.writer(fd)

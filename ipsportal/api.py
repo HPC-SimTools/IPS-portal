@@ -205,23 +205,28 @@ def event() -> tuple[Response, int]:
                     if parent_integer_runid is not None:
                         ensembles = get_ensembles(run_dict['parent_portal_runid'], run_dict['portal_ensemble_id'])
                         if ensembles:
-                            update_ensemble_information(
-                                runid,
-                                request.root_url.rstrip('/'),
-                                run_dict['simname'],
-                                run_dict['user'],
-                                ensembles[0]['path'],
-                            )
+                            try:
+                                update_ensemble_information(
+                                    runid,
+                                    request.root_url.rstrip('/'),
+                                    run_dict['simname'],
+                                    run_dict['user'],
+                                    ensembles[0]['path'],
+                                )
+                            except Exception:
+                                logger.exception('update_ensemble_information exception...')
+                                error = 'exception from update_ensemble_information'
                         else:
-                            error = 'failed during update_ensemble_information call'
+                            error = 'failed when trying to get the actual runid from the parent_portal_runid and the portal_ensemble_if'
                     else:
                         error = 'unable to retrieve the real runid from the parent portal runid'
                     if error:
                         errors.append('Could not update parent ensemble information')
                         current_app.logger.error(
-                            'Could not update parent ensemble information for %s %s because: %s',
+                            'Could not update parent ensemble information for parentid=%s simname=%s ensemble_id=%s because: %s',
                             run_dict['parent_portal_runid'],
                             run_dict['simname'],
+                            run_dict['portal_ensemble_id'],
                             error,
                         )
             except FileNotFoundError:
