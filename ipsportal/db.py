@@ -197,6 +197,15 @@ def get_parent_portal_runid(portal_runid: str) -> str | None:
     return None
 
 
+def get_runid_from_parent_portal_runid(parent_portal_runid: str) -> int | None:
+    result = db.runs.find_one(
+        filter={'parent_portal_runid': parent_portal_runid}, projection={'portal_runid': True, '_id': False}
+    )
+    if result:
+        return result.get('portal_runid')
+    return None
+
+
 def next_runid() -> int:
     return int(db.runid.find_one_and_update({}, {'$inc': {'runid': 1}}, upsert=True, new=True).get('runid', 0))
 
