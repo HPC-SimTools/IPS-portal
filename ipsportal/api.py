@@ -17,7 +17,7 @@ from ipsportal.db import (
     get_parent_portal_runid,
     get_portal_runid,
     get_run,
-    get_runid_from_parent_portal_runid,
+    get_runid,
     get_runs,
     get_runs_total,
     get_trace,
@@ -201,7 +201,7 @@ def event() -> tuple[Response, int]:
                 ):
                     logger.info('Preparing to update ensemble CSV of parent runid %s', run_dict['parent_portal_runid'])
                     error = ''
-                    parent_integer_runid = get_runid_from_parent_portal_runid(run_dict['parent_portal_runid'])
+                    parent_integer_runid = get_runid(run_dict['parent_portal_runid'])
                     if parent_integer_runid is not None:
                         ensembles = get_ensembles(run_dict['parent_portal_runid'], run_dict['portal_ensemble_id'])
                         if ensembles:
@@ -219,9 +219,10 @@ def event() -> tuple[Response, int]:
                     if error:
                         errors.append('Could not update parent ensemble information')
                         current_app.logger.error(
-                            'Could not update parent ensemble information for %s %s',
+                            'Could not update parent ensemble information for %s %s because: %s',
                             run_dict['parent_portal_runid'],
                             run_dict['simname'],
+                            error,
                         )
             except FileNotFoundError:
                 current_app.logger.exception('no file for %s', run_dict['parent_portal_runid'])
