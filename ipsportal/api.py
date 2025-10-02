@@ -198,6 +198,7 @@ def event() -> tuple[Response, int]:
                     and 'simname' in run_dict
                     and 'user' in run_dict
                 ):
+                    logger.info('Preparing to update ensemble CSV of parent runid %s', run_dict['parent_portal_runid'])
                     ensembles = get_ensembles(run_dict['parent_portal_runid'], run_dict['portal_ensemble_id'])
                     if not ensembles:
                         errors.append('Could not update parent ensemble information')
