@@ -6,6 +6,9 @@ from pathlib import Path
 
 from urllib3.util import parse_url
 
+# LOGGING CONFIG
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
+logging.basicConfig(level=LOG_LEVEL, format='%(asctime)s %(message)s')
 logger = logging.getLogger(__name__)
 
 ############ MongoDB config #############################
