@@ -1,9 +1,7 @@
 import csv
 import logging
 import os
-import shutil
 from io import StringIO
-from tempfile import NamedTemporaryFile
 from typing import Any
 
 from ._jupyter.hub_implementations import get_jupyter_url_prefix
@@ -33,10 +31,13 @@ def save_initial_csv(initial_csv: bytes, path: str | os.PathLike[Any]) -> None:
 def update_ensemble_information(
     runid: int, base_url: str, sim_name: str, username: str, csv_path: str | os.PathLike[Any]
 ) -> None:
-    with NamedTemporaryFile(mode='w', delete=False, newline='') as tempfile, open(csv_path) as fd:
-        reader = csv.reader(fd)
-
-        writer = csv.writer(tempfile)
+    # we will want to make sure that each call to this function has an exclusive read/write to the file descriptor at one time.
+    # do not read from one FD and write to a separate FD, as this can cause update issues.
+    with open(csv_path, 'r+') as fd:
+        # we will need to read the entire file into memory while still holding the file descriptor
+        reader = csv.reader(fd.readlines())
+        fd.seek(0)
+        writer = csv.writer(fd)
 
         # handle header row separately
         header_row = next(reader)
@@ -49,5 +50,3 @@ def update_ensemble_information(
                 row[1] = f'{base_url}/{runid}'
                 row[2] = f'{get_jupyter_url_prefix(username)}/{username}/{runid}'
             writer.writerow(row)
-
-    shutil.move(tempfile.name, csv_path)

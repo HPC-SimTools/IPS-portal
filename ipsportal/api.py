@@ -199,11 +199,15 @@ def event() -> tuple[Response, int]:
                     and 'simname' in run_dict
                     and 'user' in run_dict
                 ):
-                    logger.info('Preparing to update ensemble CSV of parent runid %s', run_dict['parent_portal_runid'])
+                    logger.info(
+                        'Preparing to update ensemble CSV with runid %s of parent_portal_runid %s',
+                        runid,
+                        run_dict['parent_portal_runid'],
+                    )
                     error = ''
                     parent_integer_runid = get_runid(run_dict['parent_portal_runid'])
                     if parent_integer_runid is not None:
-                        ensembles = get_ensembles(run_dict['parent_portal_runid'], run_dict['portal_ensemble_id'])
+                        ensembles = get_ensembles(parent_integer_runid, run_dict['portal_ensemble_id'])
                         if ensembles:
                             try:
                                 update_ensemble_information(
@@ -217,7 +221,7 @@ def event() -> tuple[Response, int]:
                                 logger.exception('update_ensemble_information exception...')
                                 error = 'exception from update_ensemble_information'
                         else:
-                            error = 'failed when trying to get the actual runid from the parent_portal_runid and the portal_ensemble_if'
+                            error = 'failed when trying to get the actual runid from the parent_portal_runid and the portal_ensemble_id'
                     else:
                         error = 'unable to retrieve the real runid from the parent portal runid'
                     if error:
