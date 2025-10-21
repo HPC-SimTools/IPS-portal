@@ -219,18 +219,30 @@ with ThreadPoolExecutor() as executor:
           <th>Sim Name</th>
           <th>Run</th>
           <th>Instance Analysis URL</th>
+          {# see https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/td#colspan for an explanation of the 'magic number' 1000 #}
+          <th colspan="1000">Component Variables</th>
         </tr>
       </thead>
       {% for ensemble in ensemble_information %}
       <tbody id="ensemble-{{ensemble['ensemble_id']}}">
         <tr>
-          <th scope="rowgroup" colspan="3">{{ensemble['ensemble_id']}}</th>
+          <th scope="rowgroup" colspan="3">{{ensemble['ensemble_name']}}</th>
+          {% for column in ensemble['component_keys'] %}
+          <th scope="rowgroup">
+            {{column}}
+          </th>
+          {% endfor %}
         </tr>
         {% for row in ensemble['data'] %}
         <tr>
           <td>{{row['sim_name']}}</td>
           <td><a href="{{row['run_url']}}">{{row['portal_runid']}}</a></td>
           <td><a href="{{row['instance_analysis_url']}}">View run on Jupyter</a></td>
+          {% for column in ensemble['component_keys'] %}
+          <td>
+            {{row[column]}}
+          </td>
+          {% endfor %}
         </tr>
         {% endfor %}
       </tbody>

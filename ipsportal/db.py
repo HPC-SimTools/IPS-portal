@@ -19,6 +19,10 @@ class EnsembleInformation(TypedDict):
 
     Ensemble ids should be unique throughout the entire application.
     """
+    ensemble_name: str
+    """
+    Human-readable ensemble name (set by domain scientist), unique per run
+    """
     path: str
     """The path to the flat-file which stores the ensemble data"""
 
@@ -257,11 +261,12 @@ def get_parent_runid_by_child_runid(child_runid: int) -> int | None:
     return get_runid(parent_portal_runid)
 
 
-def save_ensemble_file_path(runid: int, ensemble_id: str, path: str) -> None:
+def save_ensemble_file_path(runid: int, ensemble_id: str, ensemble_name: str, path: str) -> None:
     """The ensemble runner adds ensemble information.
 
     - runid: the ID of the run itself (the "parent")
     - ensemble_id: the ID of the ensemble we're tracking. This is tracked in child events
+    - ensemble_name: human-readable name of the ensemble, set from the IPS framework and used for visualizations
     - path: where we are saving the CSV to
     """
     db.data.update_one(
@@ -270,6 +275,7 @@ def save_ensemble_file_path(runid: int, ensemble_id: str, path: str) -> None:
             '$push': {
                 'ensembles': {
                     'ensemble_id': ensemble_id,
+                    'ensemble_name': ensemble_name,
                     'path': path,
                 }
             }

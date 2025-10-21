@@ -1,5 +1,6 @@
 import logging
 from csv import DictReader
+from typing import Any
 
 from flask import Blueprint, render_template
 from urllib3.util import parse_url
@@ -36,11 +37,14 @@ def run(runid: int) -> tuple[str, int]:
         for listing in ensemble_information_meta:
             try:
                 with open(listing['path']) as fd:
-                    data = list(DictReader(fd))
+                    data: list[dict[str, Any]] = list(DictReader(fd))
+                    # component keys should ALWAYS have a ':' in them, and non-component keys should NEVER have a ':' in them. Make sure the framework follows this convention.
+                    component_keys = list(filter(lambda column: ':' in column, data[0].keys()))
                     ensemble_information.append(
                         {
                             'data': data,
-                            'ensemble_id': listing['ensemble_id'],
+                            'ensemble_name': listing['ensemble_name'],
+                            'component_keys': component_keys,
                         }
                     )
             except Exception:

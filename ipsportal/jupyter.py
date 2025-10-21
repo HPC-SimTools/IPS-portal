@@ -133,7 +133,7 @@ def add_ensemble_file(
     try:
         logger.info('Begin saving CSV for runid %s', runid)
         save_initial_csv(data, ensemble_path)
-        save_ensemble_file_path(runid, ensemble_id, str(ensemble_path))
+        save_ensemble_file_path(runid, ensemble_id, ensemble_name, str(ensemble_path))
         logger.info('Finished saving CSV for runid %s', runid)
     except Exception:
         logger.exception('Unable to write ensemble CSV file %s', ensemble_path)
