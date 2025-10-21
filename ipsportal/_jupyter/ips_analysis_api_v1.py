@@ -4,6 +4,7 @@ This file consists of APIs meant to be utilized by Jupyter Notebooks."""
 
 from __future__ import annotations
 
+import csv
 import datetime
 import json
 import os
@@ -44,6 +45,20 @@ class IPSAnalysisApi:
         Note that it is your responsibility to handle loading the actual data itself.
         """
         child_runids = _get_children_ids_from_directory(self._run_directory)
+        return get_data_from_runids(child_runids)
+
+    def get_child_data_by_ensemble_names(
+        self, ensemble_names: list[str] | None = None
+    ) -> dict[int, dict[float, list[str]]]:
+        """This returns a mapping of this run's child runids to an additional mapping of timesteps to a list of data filepaths associated with the timestep. It uses ensemble names as a filter.
+
+        :param ensemble_names: (default: None) list of ensembles you want to include in the return data. If None, return all children which are ensembles.
+        """
+        child_runids = _get_children_ids_by_ensemble_names_from_directory(self._run_directory, ensemble_names)
+        return get_data_from_runids(child_runids)
+
+    def get_child_data_not_ensembles(self) -> dict[int, dict[float, list[str]]]:
+        child_runids = _get_nonensemble_child_ids_by_directory(self._run_directory)
         return get_data_from_runids(child_runids)
 
 
@@ -103,20 +118,59 @@ def _get_children_ids_from_directory(directory: Path) -> list[int]:
 
 
 def get_children_ids_by_parent_id(parent_runid: int) -> list[int]:
-    """Get the runids of all child runs of the parent"""
+    """Get the runids of all child runs of the parent.
+
+    :param parent_runid: the ID of the parent we want the children of
+    :returns: all child runids
+    """
     return _get_children_ids_from_directory(THIS_DIR / str(parent_runid))
 
 
-def get_children_ids_not_ensembles(parent_runid: int) -> list[int]:
-    """Get the runids of all child runs of the parent which are NOT associated with an ensemble."""
-    # TODO
-    return _get_children_ids_from_directory(THIS_DIR / str(parent_runid))
+def get_children_ids_not_ensembles(parent_runid: int) -> set[int]:
+    """Get the runids of all child runs of the parent which are NOT associated with an ensemble.
+
+    :param parent_runid: the ID of the parent we want the children of
+    :returns: child runids not associated with any ensemble
+    """
+    return _get_nonensemble_child_ids_by_directory(THIS_DIR / str(parent_runid))
 
 
-def get_children_ids_by_ensemble_name(parent_runid: int, _ensemble_name: list[str] | None = None) -> list[int]:
-    """Get the runids of all child runs of the parent which are associated with 'ensemble_name'."""
-    # TODO
-    return _get_children_ids_from_directory(THIS_DIR / str(parent_runid))
+def _get_nonensemble_child_ids_by_directory(parent_runid_directory: Path) -> set[int]:
+    all_ids = set(_get_children_ids_from_directory(parent_runid_directory))
+    ensemble_ids = _get_children_ids_by_ensemble_names_from_directory(parent_runid_directory)
+    return all_ids.difference(ensemble_ids)
+
+
+def get_children_ids_by_ensemble_names_of_parent(
+    parent_runid: int, ensemble_names: list[str] | None = None
+) -> set[int]:
+    """Get the runids of all child runs of the parent which are associated with 'ensemble_name'.
+
+    Note that this function always returns at least one child associated with an ensemble, and only returns children associated with an ensemble.
+
+    :param parent_runid: the ID of the parent we want the children of
+    :param ensemble_names: (default: None) list of ensembles you want to include in the return data. If None, return all children which are ensembles.
+    :returns: child runids associated with the listed ensembles (or all ensembles if ensemble_names param was not provided)
+    """
+    return _get_children_ids_by_ensemble_names_from_directory(THIS_DIR / str(parent_runid), ensemble_names)
+
+
+def _get_children_ids_by_ensemble_names_from_directory(
+    parent_runid_directory: Path, ensemble_names: list[str] | None = None
+) -> set[int]:
+    ENSEMBLES_DIRECTORY = parent_runid_directory / 'ensembles'
+    if not ensemble_names:
+        ensemble_paths = list(ENSEMBLES_DIRECTORY.glob('*.csv'))
+    else:
+        ensemble_paths = [ENSEMBLES_DIRECTORY / f'{ename}.csv' for ename in ensemble_names]
+
+    child_runids = set()
+    for epath in ensemble_paths:
+        with open(epath) as fd:
+            rows = csv.DictReader(fd)
+            for row in rows:
+                child_runids.add(int(row['portal_runid']))
+    return child_runids
 
 
 def generate_tar_from_runids(runids: Iterable[int] | int) -> str:
