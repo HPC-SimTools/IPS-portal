@@ -1,7 +1,12 @@
+import logging
+from csv import DictReader
+
 from flask import Blueprint, render_template
 from urllib3.util import parse_url
 
 from ipsportal.db import get_data_information, get_run, get_runid
+
+logger = logging.getLogger(__name__)
 
 bp = Blueprint('index', __name__)
 
@@ -21,11 +26,25 @@ def run(runid: int) -> tuple[str, int]:
         run['parent_runid'] = get_runid(str(run.get('parent_portal_runid')))
     else:
         run['parent_runid'] = None
-    data_info, jupyter_urls, ensemble_information = get_data_information(runid)
+    data_info, jupyter_urls, ensemble_information_meta = get_data_information(runid)
     if jupyter_urls:
         resolved_jupyter_urls = [[jupyter_url, parse_url(jupyter_url).host] for jupyter_url in jupyter_urls]
     else:
         resolved_jupyter_urls = None
+    ensemble_information = []
+    if ensemble_information_meta:
+        for listing in ensemble_information_meta:
+            try:
+                with open(listing['path']) as fd:
+                    data = list(DictReader(fd))
+                    ensemble_information.append(
+                        {
+                            'data': data,
+                            'ensemble_id': listing['ensemble_id'],
+                        }
+                    )
+            except Exception:
+                logger.exception('potentially invalid listing: %s', listing)
     return render_template(
         'events.html',
         run=run,
