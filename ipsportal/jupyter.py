@@ -130,6 +130,7 @@ def add_ensemble_file(
         return ('Server screwed up', 500)
 
     ensemble_path = root_dir / 'ensembles' / component_name / f'{ensemble_name}.csv'
+    os.makedirs(ensemble_path.parent, exist_ok=True)
     try:
         logger.info('Begin saving CSV for runid %s', runid)
         save_initial_csv(data, ensemble_path)
