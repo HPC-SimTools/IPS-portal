@@ -139,9 +139,10 @@ Basic API instructions:
   - `ips_analysis_api.get_data()` - this generates a generic IPS mapping - a mapping of floating-point timesteps to a list of data file paths (absolute). Note that your notebook will need to handle the actual loading of the data.
   - `ips_analysis_api.get_child_data()` - this generates a mapping of child runids to the "generic IPS mapping" described above.
   - `ips_analysis_api.get_child_data_not_ensembles()` - get the child runid mapping as described above, but only use child runids NOT associated with ensembles.
-  - `ips_analysis_api.get_child_data_by_ensemble_names()` - gets the child runid mapping as described above, but will only retrieve child runids associated with ensembles. You can further filter this by ensemble name by providing an optional list of ensemble names; for example, `ips_analysis_api.get_child_data_by_ensemble_names(['ensemble_name_1', 'ensemble_name_2'])` will ONLY fetch the child runids associated with 'ensemble_name_1' and 'ensemble_name_2'.
-
+  - ``ips_analysis_api.get_child_data_by_ensemble_names()`` - gets the child runid mapping as described above, but will only retrieve child runids associated with ensembles. You can further filter this by ensemble name by providing an optional list of component names and an optional list of ensemble names; for example, ``ips_analysis_api.get_child_data_by_ensemble_names(ensemble_names=['ensemble_name_1', 'ensemble_name_2'])`` will ONLY fetch the child runids associated with 'ensemble_name_1' and 'ensemble_name_2', but will search all components for this.
 To understand how the API works, you can inspect the 'ips_analysis_api_{CURRENT_API_VERSION}.py' file directly by going up one directory from where this notebook is located.
+
+You may also view the [latest](https://ips-framework.readthedocs.io/en/latest/user_guides/jupyter.html) documentation on ReadTheDocs for more information.
 """),  # type: ignore[no-untyped-call]
         nbf.v4.new_code_cell(f"""
 import importlib.util
