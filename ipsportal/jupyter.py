@@ -129,11 +129,11 @@ def add_ensemble_file(
         logger.error("add_ensemble_file: couldn't initialize directory %s", root_dir)
         return ('Server screwed up', 500)
 
-    ensemble_path = root_dir / 'ensembles' / f'{component_name}_{ensemble_name}.csv'
+    ensemble_path = root_dir / 'ensembles' / component_name / f'{ensemble_name}.csv'
     try:
         logger.info('Begin saving CSV for runid %s', runid)
         save_initial_csv(data, ensemble_path)
-        save_ensemble_file_path(runid, ensemble_id, ensemble_name, str(ensemble_path))
+        save_ensemble_file_path(runid, ensemble_id, component_name, ensemble_name, str(ensemble_path))
         logger.info('Finished saving CSV for runid %s', runid)
     except Exception:
         logger.exception('Unable to write ensemble CSV file %s', ensemble_path)
