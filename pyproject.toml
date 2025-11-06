@@ -1,3 +1,27 @@
+[project]
+name = "ipsportal"
+dynamic = ["version"]
+description = "IPS Portal for IPS Framework"
+requires-python = ">=3.10"
+dependencies = [
+    "flask==2.3.3",
+    "pymongo==4.6.3",
+    "gunicorn==20.1",
+    "plotly==5.11",
+    "requests==2.31.0",
+    "minio==7.2.7",
+    "nbformat==5.10.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "coverage",
+    "ruff==0.9.4",
+    "mypy",
+    "types-requests",
+]
+
 [build-system]
 requires = [
   "setuptools >= 42",
@@ -5,9 +29,19 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+packages = {find = {}}
+zip-safe = true
+include-package-data = true
+
 [tool.versioningit.vcs]
 method = "git"
 default-tag = "0.0.1"
+
+[tool.coverage.report]
+include = [
+    "ipsportal/*.py",
+]
 
 [tool.ruff]
 target-version = "py310"
@@ -93,3 +127,8 @@ ignore = [
     'FA100',  # tests frequently use runtime typing annotations
     'PLR0915', # allow multiple statements
 ]
+
+[tool.mypy]
+ignore_missing_imports = true
+strict = true
+warn_unused_ignores = false
