@@ -85,7 +85,7 @@ except OSError as e:
     err_msg = f'JUPYTERHUB_PORTAL_DIR value "{JUPYTERHUB_PORTAL_DIR}" is invalid; it should be an absolute path and should allow creation of a directory.'
     raise RuntimeError(err_msg) from e
 
-JUPYTERHUB_DIR = Path(os.environ.get('JUPYTERHUB_DIR', get_default_tmp_directory('JUPYTERHUB_DIR')))
+JUPYTERHUB_DIR = Path(os.environ.get('JUPYTERHUB_DIR', '')) or Path(get_default_tmp_directory('JUPYTERHUB_DIR'))
 """
 This is the path to the shared volume from the JUPYTERHUB instance's perspective. This is generally used for crafting external URLs to the source.
 
