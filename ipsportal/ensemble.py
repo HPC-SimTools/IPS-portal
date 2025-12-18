@@ -4,6 +4,7 @@ import os
 from io import StringIO
 from typing import Any
 
+from . import environment
 from ._jupyter.hub_implementations import get_jupyter_url_prefix
 
 logger = logging.getLogger(__name__)
@@ -52,5 +53,6 @@ def update_ensemble_information(
             if row[3] == sim_name:
                 row[0] = str(runid)
                 row[1] = f'{base_url}/{runid}'
-                row[2] = f'{get_jupyter_url_prefix(username)}/{username}/{runid}'
+                run_path = environment.JUPYTERHUB_DIR / username / str(runid)
+                row[2] = f'{get_jupyter_url_prefix(username)}{run_path}'
             writer.writerow(row)
