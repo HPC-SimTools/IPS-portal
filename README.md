@@ -21,8 +21,8 @@ python -m pip install --upgrade pip
 To run the application in debug mode
 
 ```shell
-export FLASK_APP=ipsportal
-export FLASK_DEBUG=True
+# set up environment variables
+source .env.example
 
 # start IPS portal
 flask run
