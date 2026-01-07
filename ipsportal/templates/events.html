@@ -109,7 +109,7 @@
         <li>
         {% set notebook_name = url.rpartition('/')[2] %}
         {% if host == "jupyter.nersc.gov" %}
-          <button class="jupyter-url-btn" data-original-url="{{url}}">{{notebook_name}}</button>
+          <button class="jupyter-nersc-url-btn" data-original-url="{{url}}">{{notebook_name}}</button>
         {% else %}
           <a href="{{url}}">{{notebook_name}}</a>
         {% endif %}
@@ -237,7 +237,13 @@ with ThreadPoolExecutor() as executor:
         <tr>
           <td>{{row['sim_name']}}</td>
           <td><a href="{{row['run_url']}}">{{row['portal_runid']}}</a></td>
-          <td><a href="{{row['instance_analysis_url']}}">View run on Jupyter</a></td>
+          <td>
+            {% if jupyterhub_implementation == "nersc" %}
+            <button class="jupyter-nersc-url-btn" data-original-url="{{jupyter_url_prefix}}{{row['instance_analysis_path']}}">View run on Jupyter</button>
+            {% else %}
+            <a href="{{jupyter_url_prefix}}{{row['instance_analysis_path']}}">View run on Jupyter</a>
+            {% endif %}
+          </td>
           {% for column in ensemble['component_keys'] %}
           <td>
             {{row[column]}}

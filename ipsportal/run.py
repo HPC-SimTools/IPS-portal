@@ -5,7 +5,9 @@ from typing import Any
 from flask import Blueprint, render_template
 from urllib3.util import parse_url
 
+from ipsportal._jupyter.hub_implementations import get_jupyter_url_prefix
 from ipsportal.db import get_data_information, get_run, get_runid
+from ipsportal.environment import JUPYTERHUB_IMPLEMENTATION
 
 logger = logging.getLogger(__name__)
 
@@ -55,4 +57,6 @@ def run(runid: int) -> tuple[str, int]:
         data_info=data_info,
         jupyter_urls=resolved_jupyter_urls,
         ensemble_information=ensemble_information,
+        jupyter_url_prefix=get_jupyter_url_prefix('_'),
+        jupyterhub_implementation=JUPYTERHUB_IMPLEMENTATION,
     ), 200

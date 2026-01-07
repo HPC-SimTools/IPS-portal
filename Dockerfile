@@ -10,4 +10,6 @@ CMD ["gunicorn", "-w", "16", "-b", "0.0.0.0:8080", "ipsportal:create_app()"]
 
 ADD docker-entrypoint.sh /bin/docker-entrypoint.sh
 RUN chmod +x /bin/docker-entrypoint.sh
+# default shared FS mount directory
+ENV JUPYTERHUB_PORTAL_DIR="/tmp/ipsportal-jupyter"
 ENTRYPOINT ["/bin/docker-entrypoint.sh"]

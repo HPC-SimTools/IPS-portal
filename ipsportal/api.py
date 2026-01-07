@@ -208,7 +208,7 @@ def event() -> tuple[Response, int]:
                     parent_integer_runid = get_runid(run_dict['parent_portal_runid'])
                     if parent_integer_runid is not None:
                         ensembles = get_ensembles(parent_integer_runid, run_dict['portal_ensemble_id'])
-                        if ensembles:
+                        if ensembles is not None:
                             try:
                                 update_ensemble_information(
                                     runid,

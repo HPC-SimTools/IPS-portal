@@ -18,3 +18,12 @@ services:
     command: ["server", "start"]
     #volumes:
       #- "./tmp/minio:/data"
+
+  jupyterlab:
+    build:
+      context: './devtools/jupyterlab'
+    ports:
+      - 8888:8888
+    volumes:
+      - './devtools/jupyterlab/work:/home/jovyan/work'
+    command: ["start-notebook.py", "--NotebookApp.token=''"]
