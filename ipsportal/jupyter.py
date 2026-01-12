@@ -42,6 +42,13 @@ def _initialize_jupyterhub_dir(root_dir: Path, runid: int) -> bool:
     return True
 
 
+def setup_jupyter_from_ips_start(username: str, runid: int) -> None:
+    root_dir = JUPYTERHUB_PORTAL_DIR / username / str(runid)
+    if not root_dir.exists() and not _initialize_jupyterhub_dir(root_dir, runid):
+        logger.error("setup_jupyter_from_ips_start: couldn't initialize directory %s", root_dir)
+        raise Exception  # noqa: TRY002
+
+
 def add_jupyter_notebook(runid: int, username: str, notebook_name: str, data: bytes) -> tuple[str, int]:
     root_dir = JUPYTERHUB_PORTAL_DIR / username / str(runid)
     if not root_dir.exists() and not _initialize_jupyterhub_dir(root_dir, runid):

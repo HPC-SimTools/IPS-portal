@@ -1,8 +1,7 @@
-// in a URL for jupyter.nersc.gov , users must provide NERSC Shibboleth (auth manager) credentials in the URL, but this will only work for a single user.
-// We can dynamically create this URL on the frontend.
-
 const NERSC_URL_HELPER_STORAGE_KEY = "username__jupyter.nersc.gov";
 
+// in a URL for jupyter.nersc.gov , users must provide NERSC Shibboleth (auth manager) credentials in the URL, but this will only work for a single user.
+// We can dynamically create this URL on the frontend.
 function onNerscJupyterUrlBtnClick(event) {
   const nerscUsername = window.prompt(
     "Enter your NERSC username.",

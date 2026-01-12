@@ -25,6 +25,7 @@ from ipsportal.db import (
     update_run,
 )
 from ipsportal.ensemble import update_ensemble_information
+from ipsportal.jupyter import setup_jupyter_from_ips_start
 
 # from ipsportal.environment import SECRET_API_KEY
 from ipsportal.trace_jaeger import send_trace
@@ -192,6 +193,7 @@ def event() -> tuple[Response, int]:
             run_dict['has_trace'] = False
             try:
                 add_run(run_dict)
+                setup_jupyter_from_ips_start(run_dict['user'], runid)
                 # if this is an ensemble run, we need to update its parent
                 if (
                     'portal_ensemble_id' in run_dict
