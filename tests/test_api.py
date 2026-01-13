@@ -18,6 +18,7 @@ def test_post_events(client):
         'phystimestamp': -1,
         'portal_runid': portal_runid,
         'seqnum': 0,
+        'user': 'identity_crisis',
     }
     response = client.post('/api/event', json=start_event)
 
@@ -260,6 +261,7 @@ def test_duplicate_portal_runid(client):
         'phystimestamp': -1,
         'portal_runid': portal_runid,
         'seqnum': 0,
+        'user': 'identity_crisis',
     }
     response = client.post('/api/event', json=start_event)
 
@@ -325,6 +327,7 @@ def test_post_event_array(client):
             'phystimestamp': -1,
             'portal_runid': portal_runid,
             'seqnum': 0,
+            'user': 'identity_crisis',
         },
         {
             'code': 'Framework',

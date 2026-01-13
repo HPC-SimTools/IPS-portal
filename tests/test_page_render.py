@@ -33,6 +33,7 @@ def test_post_event(client):
             'portal_runid': portal_runid,
             'seqnum': 0,
             'simname': 'CI Test',
+            'user': 'identity_crisis',
         },
     )
     assert response.status_code == 200
