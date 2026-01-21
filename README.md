@@ -7,8 +7,8 @@ Documentation for how to use IPS-framework with this IPS-portal can be found at 
 Setup environment with python venv and install IPS-portal:
 
 ```shell
-python -m venv env
-source env/bin/activate
+python -m venv .venv
+source .venv/bin/activate
 python -m pip install -e ".[dev]"
 ```
 
@@ -21,6 +21,9 @@ python -m pip install --upgrade pip
 To run the application in debug mode
 
 ```shell
+# set up docker environment for the database and Jupyterlab
+docker compose up -d
+
 # set up environment variables
 source .env.example
 
@@ -28,9 +31,22 @@ source .env.example
 flask run
 ```
 
-Go to http://localhost:5000
+Go to http://localhost:5000 for the web portal, go to http://localhost:8888 for JupyterLab
 
-### Requirements:
+To cleanup:
+
+```shell
+# remove database environment
+docker compose down -v
+
+# remove Jupyter environment
+rm -rf ${JUPYTERHUB_PORTAL_DIR}/*
+```
+
+Note that cleaning up only one environment may lead to errant links from the Portal to Jupyterlab.
+
+
+## Advanced testings:
 
 1) Mongo (stores IPS events and all metadata)
 
