@@ -57,3 +57,6 @@ def update_ensemble_information(
                 row[1] = f'{base_url}/{runid}'
                 row[2] = str(environment.JUPYTERHUB_DIR / username / str(runid))
             writer.writerow(row)
+
+        fd.flush()
+        os.fsync(fd.fileno())
