@@ -4,8 +4,9 @@ import os
 from io import StringIO
 from typing import Any
 
+import portalocker
+
 from . import environment
-from .utils.file_locker import FileLocker
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +39,11 @@ def update_ensemble_information(
 ) -> None:
     # we will want to make sure that each call to this function has an exclusive read/write to the file descriptor at one time.
     # do not read from one FD and write to a separate FD, as this can cause update issues.
-    with FileLocker(open(csv_path, 'r+')) as fd:
+    with portalocker.Lock(csv_path, 'r+', timeout=30) as fd:  # type: ignore[arg-type]
         # we will need to read the entire file into memory while still holding the file descriptor
         reader = csv.reader(fd.readlines())
         fd.seek(0)
+        fd.truncate()
         writer = csv.writer(fd)
 
         # handle header row separately
