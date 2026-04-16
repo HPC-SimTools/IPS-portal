@@ -16,6 +16,9 @@ services:
       MINIO_PRIVATE_URL: http://minio:9000
       MINIO_PUBLIC_URL: http://localhost/files
       JAEGER_HOST: jaeger
+      JUPYTERHUB_BASE_URL: "http://localhost:8888/lab/tree/work"
+      JUPYTERHUB_IMPLEMENTATION: "generic"
+
     depends_on:
      - db
      - minio
@@ -57,3 +60,11 @@ services:
     command: ["server", "start"]
     #volumes:
       #- "./tmp/minio:/data"
+
+  jupyterlab:
+    build:
+      context: './devtools/jupyterlab'
+    ports:
+      - 8888:8888
+    volumes:
+      - './devtools/jupyterlab/work:/home/jovyan/work'

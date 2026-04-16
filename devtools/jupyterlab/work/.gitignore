@@ -1,0 +1,3 @@
+# We want the work directory to exist in Git so that it's not created by Docker, which allows for the setgid check in the environment validation file to work
+*
+!/.gitignore

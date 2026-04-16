@@ -12,12 +12,6 @@ source .venv/bin/activate
 python -m pip install -e ".[dev]"
 ```
 
-If that fails with `ERROR: File "setup.py" not found.` try upgrading pip first:
-
-```shell
-python -m pip install --upgrade pip
-```
-
 To run the application in debug mode
 
 ```shell
@@ -46,6 +40,12 @@ rm -rf ${JUPYTERHUB_PORTAL_DIR}/*
 Note that cleaning up only one environment may lead to errant links from the Portal to Jupyterlab.
 
 
+## Architecture
+
+The IPS Portal needs to share a filesystem mount with the directories used in Jupyter.
+
+It is important to
+
 ## Advanced testings:
 
 1) Mongo (stores IPS events and all metadata)
@@ -59,6 +59,18 @@ docker run --rm -p 27017:27017 -v /tmp/db:/data/db mongo:6
 ```shell
 docker run --rm -p 9000:9000 -p 9001:9001 -e MINIO_ROOT_USER=AKIAIOSFODNN7EXAMPLE -e MINIO_ROOT_PASSWORD=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
 ```
+
+### setgid
+
+You will need to make sure that your Jupyterlab directory -  `devtools/jupyterlab/work` with the default configs - has the setgid flag set:
+
+```shell
+chmod -R g+s devtools/jupyterlab/work
+```
+
+(If you do not have the setgid flag set on this directory, you can run into permissions issues if a user creates `.ipynb_checkpoints` or directories from the web interface.)
+
+This is EXTREMELY important to follow in
 
 ### For profile tracing
 

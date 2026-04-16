@@ -80,10 +80,21 @@ if not os.path.isabs(JUPYTERHUB_PORTAL_DIR):
     raise RuntimeError(err_msg)
 # attempt to create the shared jupyter directory immediately
 try:
-    os.makedirs(JUPYTERHUB_PORTAL_DIR, exist_ok=True)
+    os.makedirs(JUPYTERHUB_PORTAL_DIR, mode=0o2770, exist_ok=True)
 except OSError as e:
     err_msg = f'JUPYTERHUB_PORTAL_DIR value "{JUPYTERHUB_PORTAL_DIR}" is invalid; it should be an absolute path and should allow creation of a directory.'
     raise RuntimeError(err_msg) from e
+
+# try to ensure setgid on the directory
+try:
+    os.chmod(JUPYTERHUB_PORTAL_DIR, 0o2770)  # noqa: S103 (group write/execute functionality is currently intended)
+except OSError:
+    import warnings
+
+    warnings.warn(
+        f'Could not properly set perrmissions for {JUPYTERHUB_PORTAL_DIR}, interactivity through Jupyter may be affected.',
+        stacklevel=2,
+    )
 
 JUPYTERHUB_DIR = Path(os.environ.get('JUPYTERHUB_DIR', '') or get_default_tmp_directory('JUPYTERHUB_DIR'))
 """

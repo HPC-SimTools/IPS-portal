@@ -26,4 +26,3 @@ services:
       - 8888:8888
     volumes:
       - './devtools/jupyterlab/work:/home/jovyan/work'
-    command: ["start-notebook.py", "--NotebookApp.token=''"]
