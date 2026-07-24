@@ -9,7 +9,11 @@ from pymongo.errors import PyMongoError
 
 from .db import db
 from .environment import SECRET_API_KEY
-from .jupyter import add_analysis_data_file_for_timestep, add_ensemble_file, add_jupyter_notebook
+from .jupyter import (
+    add_analysis_data_file_for_timestep,
+    add_ensemble_file,
+    add_jupyter_notebook,
+)
 from .util import is_valid_filename
 
 logger = logging.getLogger(__name__)
@@ -149,7 +153,11 @@ def add_notebook() -> tuple[Response, int]:
     if not filename or not filename.endswith('.ipynb'):
         return jsonify('Invalid jupyter notebook filename'), 400
     if not is_valid_filename(filename[:-6]):
-        logger.warning('Invalid filename %s, ascii characters [%s]', filename, ', '.join(str(ord(i)) for i in filename))
+        logger.warning(
+            'Invalid filename %s, ascii characters [%s]',
+            filename,
+            ', '.join(str(ord(i)) for i in filename),
+        )
         return jsonify('Invalid jupyter notebook filename'), 400
 
     if not request.data:
@@ -234,7 +242,11 @@ def add_data_file() -> tuple[Response, int]:
     if not filename:
         return jsonify('Invalid filename'), 400
     if not is_valid_filename(filename):
-        logger.warning('Invalid filename %s, ascii characters [%s]', filename, ', '.join(str(ord(i)) for i in filename))
+        logger.warning(
+            'Invalid filename %s, ascii characters [%s]',
+            filename,
+            ', '.join(str(ord(i)) for i in filename),
+        )
         return jsonify('Invalid filename, only alphanumerics, dot, hyphen, underscore, and %+# allowed'), 400
 
     if not request.data:
@@ -262,7 +274,13 @@ def add_data_file() -> tuple[Response, int]:
     archive_format = request.headers.get('X-Ips-Archive-Format', '')
 
     result = add_analysis_data_file_for_timestep(
-        runid, username, filename, request.data, timestep, replace, archive_format
+        runid,
+        username,
+        filename,
+        request.data,
+        timestep,
+        replace,
+        archive_format,
     )
     return jsonify(result[0]), result[1]
 

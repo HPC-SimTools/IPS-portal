@@ -29,14 +29,19 @@ def save_initial_csv(initial_csv: bytes, path: str | os.PathLike[Any]) -> None:
     for i in range(1, len(data)):
         data[i] = [*(['?'] * len(PORTAL_GENERATED_KEYS)), *data[i]]
 
+    # do not lock the file, always force overwrite
     with open(path, 'w', newline='') as fd:
         writer = csv.writer(fd)
         writer.writerows(data)
+
+        fd.flush()
+        os.fsync(fd.fileno())
 
 
 def update_ensemble_information(
     runid: int, base_url: str, sim_name: str, username: str, csv_path: str | os.PathLike[Any]
 ) -> None:
+    """Update ensemble CSV row with the given sim_name with the runid."""
     # we will want to make sure that each call to this function has an exclusive read/write to the file descriptor at one time.
     # do not read from one FD and write to a separate FD, as this can cause update issues.
     with portalocker.Lock(csv_path, 'r+', timeout=30) as fd:  # type: ignore[arg-type]

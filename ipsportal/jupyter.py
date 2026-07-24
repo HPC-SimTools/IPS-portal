@@ -35,7 +35,9 @@ def _initialize_jupyterhub_dir(root_dir: Path, runid: int) -> bool:
 
     except OSError as e:
         logger.warning(
-            'Could not make directories with provided JUPYTERHUB_DIR value "%s", full error: %s', root_dir, e
+            'Could not make directories with provided JUPYTERHUB_DIR value "%s", full error: %s',
+            root_dir,
+            e,
         )
         return False
 
@@ -45,7 +47,10 @@ def _initialize_jupyterhub_dir(root_dir: Path, runid: int) -> bool:
 def setup_jupyter_from_ips_start(username: str, runid: int) -> None:
     root_dir = JUPYTERHUB_PORTAL_DIR / username / str(runid)
     if not root_dir.exists() and not _initialize_jupyterhub_dir(root_dir, runid):
-        logger.error("setup_jupyter_from_ips_start: couldn't initialize directory %s", root_dir)
+        logger.error(
+            "setup_jupyter_from_ips_start: couldn't initialize directory %s",
+            root_dir,
+        )
         raise Exception  # noqa: TRY002
 
 
@@ -90,7 +95,11 @@ def add_analysis_data_file_for_timestep(
                     # make sure we don't have nonsense like "/etc/passwd" or "../etc/passwd"
                     # "filename" should already be validated as a safe path by checking its basename prior to this function call
                     if not member.name.startswith(filename):
-                        logger.error('%s is an invalid archive name for %s', member.name, filename)
+                        logger.error(
+                            '%s is an invalid archive name for %s',
+                            member.name,
+                            filename,
+                        )
                         return ('Tarball name mismatch', 400)
                     tar.extract(member=member, path=data_file_loc.parent)
         except Exception:
@@ -141,7 +150,13 @@ def add_ensemble_file(
     try:
         logger.info('Begin saving CSV for runid %s', runid)
         save_initial_csv(data, ensemble_path)
-        save_ensemble_file_path(runid, ensemble_id, component_name, ensemble_name, str(ensemble_path))
+        save_ensemble_file_path(
+            runid,
+            ensemble_id,
+            component_name,
+            ensemble_name,
+            str(ensemble_path),
+        )
         logger.info('Finished saving CSV for runid %s', runid)
     except Exception:
         logger.exception('Unable to write ensemble CSV file %s', ensemble_path)

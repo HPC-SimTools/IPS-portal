@@ -17,6 +17,7 @@ To see available libraries on NERSC, run:
 import json
 import logging
 import mmap
+import os
 import shutil
 from pathlib import Path
 
@@ -166,6 +167,8 @@ ips_analysis_api = _ips_analysis_api()
     nbf.validate(nb)
     with open(notebook_dest, 'w') as f:
         nbf.write(nb, f)  # type: ignore[no-untyped-call]
+        f.flush()
+        os.fsync(f.fileno())
 
 
 def _initialize_child_runs_file(dest: Path) -> None:
