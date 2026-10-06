@@ -4,7 +4,7 @@ services:
   db:
     image: mongo:8
     restart: unless-stopped
-    ports:  # ports are used strictly for running tests locally
+    ports: # ports are used strictly for running tests locally
       - 27017:27017
 
   app:
@@ -20,15 +20,15 @@ services:
       JUPYTERHUB_IMPLEMENTATION: "generic"
 
     depends_on:
-     - db
-     - minio
+      - db
+      - minio
 
   jaeger:
     image: jaegertracing/all-in-one:1.38
     environment:
       COLLECTOR_ZIPKIN_HOST_PORT: 9411
       QUERY_BASE_PATH: /jaeger
-    ports:  # ports are used strictly for running tests locally
+    ports: # ports are used strictly for running tests locally
       - 16686:16686
       - 9411:9411
 
@@ -49,22 +49,23 @@ services:
     environment:
       ME_CONFIG_MONGODB_SERVER: db
     depends_on:
-     - db
+      - db
 
   minio:
-    image: "minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1"
+    image: "bitnamilegacy/minio:2024.6.4"
     environment:
-      # references: https://github.com/bitnami/containers/blob/main/bitnami/minio/README.md
       MINIO_ROOT_USER: AKIAIOSFODNN7EXAMPLE
       MINIO_ROOT_PASSWORD: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-    command: ["server", "start"]
+    ports:
+      - 9000:9000
+      - 9001:9001
     #volumes:
-      #- "./tmp/minio:/data"
+    #- "./tmp/minio:/data"
 
   jupyterlab:
     build:
-      context: './devtools/jupyterlab'
+      context: "./devtools/jupyterlab"
     ports:
       - 8888:8888
     volumes:
-      - './devtools/jupyterlab/work:/home/jovyan/work'
+      - "./devtools/jupyterlab/work:/home/jovyan/work"
